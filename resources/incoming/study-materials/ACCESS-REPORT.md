@@ -115,3 +115,10 @@ Ceci est documenté comme CAPTURE, jamais comme original. Binaires : toujours li
 `https://r.jina.ai/` + URL cible ENCODÉE en %3A%2F%2F contourne le bug de réécriture du proxy de session ;
 le pont renvoie titre/nb-pages/date-HTTP/texte markdown. Taux de succès ce run : 8/9 fetch (1 échec = re-tenté chunk final, non critique).
 Aucun binaire écrit (aucun disponible), raw/ inchangé (README only), hachages utilisateur toujours NON VÉRIFIÉS.
+
+## Addendum 2026-09-20 — traitement local des archives fournies
+Les 16 ZIP ont été fournis par l'utilisateur (dépôt `raw/` sur la branche main du dépôt GitHub).
+Traitement 100 % local : extraction réelle (627 fichiers), SHA-256 réels, texte extrait (pypdf),
+classification par contenu avec confiance documentée, doublons signalés sans suppression. Aucun téléchargement
+supplémentaire effectué par mes soins ; aucun OCR (non installé, non promis) ; aucune donnée inventée :
+chaque champ non prouvé porte UNKNOWN/UNCLASSIFIED/ACADEMIC_YEAR_UNKNOWN.

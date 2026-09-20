@@ -1,0 +1,5 @@
+# Sorties locales régénérables par `python3 process-incoming.py` (ne pas committer).
+extracted/
+organized/
+__pycache__/
+*.tmp

@@ -1,0 +1,17 @@
+archive_filename	archive_path	size_bytes	sha256	archive_status	contained_file_count	extraction_status	notes
+L1---informatique-part-01.zip	raw/L1---informatique-part-01.zip	23807423	6aca1e75f3f4a493edeaeab3dedb68440712f4fd9909ae5d17a612719f6d9683	OK	69	extracted to extracted/L1---informatique-part-01	
+L1---informatique-part-02.zip	raw/L1---informatique-part-02.zip	23680279	1fb2b47b9102f483500027b2e5378228b71387d767da7a00a64c61d1221d7b90	OK	41	extracted to extracted/L1---informatique-part-02	
+L1---informatique-part-03.zip	raw/L1---informatique-part-03.zip	24265846	bc7b9728948fcc4e55b080ad5f96674e264d7140017fbdba1842fcd011c73424	OK	200	extracted to extracted/L1---informatique-part-03	
+L1---informatique-part-04.zip	raw/L1---informatique-part-04.zip	24052943	e69eb39750c525fa162a0ce892e783fafbd6d5d93018db6c2e87ef73921dc0a0	OK	34	extracted to extracted/L1---informatique-part-04	
+L1---informatique-part-05.zip	raw/L1---informatique-part-05.zip	23377131	cc4045a5352eee96244164da308c4dd76817649eb9690909e7b593fe9c4a9edd	OK	23	extracted to extracted/L1---informatique-part-05	
+L1---informatique-part-06.zip	raw/L1---informatique-part-06.zip	24133936	2990d5dfbc5a996548c16a25d6f581db35fa139c21c634531e878897a8395e0e	OK	97	extracted to extracted/L1---informatique-part-06	
+L1---informatique-part-07.zip	raw/L1---informatique-part-07.zip	24132690	30fb659f99be0372d2c7c4cef54d8175cf0e4e30272ef7fbdbd19d449149b142	OK	51	extracted to extracted/L1---informatique-part-07	
+L1---informatique-part-08.zip	raw/L1---informatique-part-08.zip	24364193	4e2efd3a024db52234c50a916c7af0bd653e724b18a9d57b6857b3e489c3dddf	OK	29	extracted to extracted/L1---informatique-part-08	
+L1---informatique-part-09.zip	raw/L1---informatique-part-09.zip	321629	1e9aff5c5027ad2d207083d14d5c97d515b27512c067d039a8f61ef8565902c9	OK	12	extracted to extracted/L1---informatique-part-09	
+L1---informatique-part-10.zip	raw/L1---informatique-part-10.zip	24683341	6e11dac492976d0b555a0fe28c8090f89e1433927d77280b85534f9356db5b2a	OK	12	extracted to extracted/L1---informatique-part-10	
+L1---informatique-part-11.zip	raw/L1---informatique-part-11.zip	23887248	c2a17fd64b8212564f5939d0e542653bd9e4779b96a8e2dbb73e3f54345ca8a8	OK	14	extracted to extracted/L1---informatique-part-11	
+L1---informatique-part-12.zip	raw/L1---informatique-part-12.zip	23497363	a5b646b263744c53a6cf382d6f1be51efd4ca3326859c7e8dfca96932586ff82	OK	12	extracted to extracted/L1---informatique-part-12	
+L1---informatique-part-13.zip	raw/L1---informatique-part-13.zip	22833518	a53c8e558450b5a4ee909e0b6a22e542e7e693003de9cf6b4295d6523e91b698	OK	8	extracted to extracted/L1---informatique-part-13	
+L1---informatique-part-14.zip	raw/L1---informatique-part-14.zip	24554763	11b3dd174b74750249e68d784e81a8718f12b42bb3c099ea3abd641ccb090bfc	OK	5	extracted to extracted/L1---informatique-part-14	
+L1---informatique-part-15.zip	raw/L1---informatique-part-15.zip	24347221	b6f99bf95df28d69efc4c0b2e74894f5da0bdfa4576cc70a11ff2dd2de935b76	OK	17	extracted to extracted/L1---informatique-part-15	
+L1---informatique-part-16.zip	raw/L1---informatique-part-16.zip	14610572	ced68d11e07512ae4709be38d3d93f7cb90372396f43a8dc58c07c33878d6e8a	OK	3	extracted to extracted/L1---informatique-part-16	

@@ -18,3 +18,7 @@ Les fichiers originaux de ce dossier ne sont jamais modifiés, renommés ni supp
 État au 2026-09-21 : AUCUN binaire d'origine n'a jamais pu y être téléchargé depuis
 cet environnement (0/22 documents Telegram ; aucune copie publique binaire trouvée) —
 le dossier n'attend que vos dépôts manuels.
+
+## Statut 2026-09-20 : dépôt traité
+16 archives (part-01…16) traitées : 627 fichiers inventoriés/classés → voir `../notes/inventory.tsv`,
+`../notes/reconciliation.md`, `../notes/material-coverage.md`. Les ZIP de ce dossier restent intacts et canoniques.

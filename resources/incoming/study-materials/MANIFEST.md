@@ -143,3 +143,9 @@ raw/ immuable, curriculum protégé, jamais de faux originaux), `raw-index.py` (
 signatures + doublons exacts — testé hors dépôt). raw/ reste le DROP ZONE unique :
 dépôt en vrac accepté, tri automatisé par contenu. Aucun matériel réel n'existait encore
 à classer (raw/ vide de fichiers réels —documenté, non fabriqué).
+
+## Addendum 2026-09-20 — traitement complet du dépôt `raw/` (16 archives)
+- 16 ZIP fournis par l'utilisateur (350,5 Mo, SHA-256 dans `notes/archive-inventory.tsv`) traités par `process-incoming.py`.
+- **627 fichiers** extraits, inspectés (SHA-256, format, texte extrait), classés par contenu, dédupliqués (99 exacts + 2 probables, conservés), copiés dans `organized/` — zéro fichier original modifié ou supprimé.
+- Registres : `notes/inventory.tsv` (16 colonnes, 627 lignes), `notes/reconciliation.md` (comptes prouvés), `notes/material-coverage.md` (couverture/lacunes par module).
+- `extracted/` et `organized/` : sorties locales régénérables (`python3 process-incoming.py`), non poussées sur GitHub (les octeurs source sont déjà dans `raw/*.zip`).
