@@ -4,6 +4,7 @@ du dépôt (aucune capacité plateforme requise). Point d'entrée du savoir : `r
 
 ## Workflow canonique (toute question étudiante)
 1. **Cadrer** : semestre (S1/S2) + module. Ambiguïté → poser la question ou traiter les deux hypothèses séparées. Ne jamais deviner le module.
+1bis. **S2 demandé ?** → répondre : « l'archive S2 n'est pas encore uploadée dans ce dépôt » + s'appuyer sur le plan de cours officiel `S2/NN-*` en explicitant l'absence de supports étudiants ; ne jamais recycler le lot S1 en le disant S2.
 2. **Sourcer** : filtrer `resources/incoming/study-materials/notes/inventory.tsv` (colonnes module/type/confiance) puis ouvrir les fichiers cités (`organized_location`). Consulter `curriculum.md` pour la structure officielle.
 3. **Vérifier** : distinguer (a) faits tirés d'un document du dépôt (citer le chemin), (b) faits du cursus officiel (S1/S2/, PROGRAMME.md), (c) explication générée par l'agent.
 4. **Produire** : appliquer le MODE demandé (lesson/td/exam/quiz/revision/correction/gap/source — fichiers dédiés ici).
@@ -36,3 +37,8 @@ awk -F'\t' 'NR>1{c[$5" | "$7]++}END{for(k in c)print k, c[k]}' resources/incomin
 - Lecture seule : ne jamais modifier raw/, organized/, S1/, S2/, ni l'inventaire.
 - Un « cours » produit par l'agent = support pédagogique non officiel, à étiqueter tel quel.
 - Examens : usage entraînement uniquement ; ne jamais affirmer qu'un sujet généré « tombera ».
+
+## ⚠️ Périmètre du lot (2026-09-21)
+Archive d'étude actuelle = **S1 uniquement**. **Archive d'étude S2 : pas encore uploadée.**
+Ne jamais classer/présenter une pièce du lot comme « matériau S2 » ; contenu ambigu → `organized/UNCLASSIFIED/`.
+Curriculum officiel S2 (racine `S2/`) = structure, pas du matériel uploadé.

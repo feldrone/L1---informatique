@@ -47,3 +47,22 @@
 | Sous-topiques détectés par module | voir `notes/module-map.md` |
 
 Arborescence : un dossier par module officiel, sous-dossiers de type créés à l'usage (Cours, TD, TP, Series, Examens, Corriges, Revisions, Supports, Autres). `raw/` et `extracted/` inchangés ; l'inventaire 16 colonnes de la Phase 1 est archivé dans `notes/inventory-v1-backup.tsv`, le registre courant passe à 19 colonnes (+subtopic, +integration_status, +canonical_info).
+
+---
+
+## Addendum correction S1-only (2026-09-21 — Phase « fix »)
+
+**Décision de périmètre** : le lot des 627 fichiers = collection **S1 uniquement** de l'utilisateur ; aucun matériel d'étude S2 n'a été uploadé à date.
+
+| Mesure | Valeur |
+|---|---:|
+| Lignes portant un module S2 avant correction | 108 (90 copies + 18 doublons) |
+| Reclassées vers un module S1 **sur preuve explicite** (nom + contenu relu) | 35 |
+| Reclassées vers UNCLASSIFIED (aucune preuve S1 ; contenu évoquant S2 conservé sans deviner) | 73 |
+| Copies déplacées physiquement dans organized/S1 ou UNCLASSIFIED (SHA-256 revérifié à la copie) | 90 |
+| Liens canoniques de doublons réindexés | 19 |
+| Semestre des 627 lignes | **S1 (627/627)** ; S2 = 0 ; UNCLASSIFIED-semestre = 0 |
+| Dossiers `organized/S2/` restants | **0** (supprimés — copies seulement ; ZIP `raw/` intacts, 16/16 SHA-256) |
+| Registre d'avant-correction archivé | `notes/inventory-pre-s1only.tsv` |
+
+Compte final : 627 = 394 copies en modules S1 + 134 copies UNCLASSIFIED (528 placées) + 99 doublons exacts liés + 2 doublons probables (comptés dans les 528) + 0 non-plaçable + **0 fichier d'étude S2**. Cursus officiel S2 intact et séparé (règle : ne jamais confondre structure du cursus et matériel uploadé).

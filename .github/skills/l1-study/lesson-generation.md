@@ -5,3 +5,8 @@
 4. Toute formule non présente dans les documents = « extension pédagogique générée, non vérifiée contre un support du cours ».
 5. Si le module n'a aucun cours dans l'archive (Analyse-2, IA, Citoyenneté, Élec-gén, Histoire) : enseigner depuis des connaissances générales ET l'annoncer : « aucun support de ce module dans le dépôt ; contenu généré, à recouper avec l'enseignant ».
 6. Citer chaque appui : chemin du fichier + (années si connues).
+
+## ⚠️ Périmètre du lot (2026-09-21)
+Archive d'étude actuelle = **S1 uniquement**. **Archive d'étude S2 : pas encore uploadée.**
+Ne jamais classer/présenter une pièce du lot comme « matériau S2 » ; contenu ambigu → `organized/UNCLASSIFIED/`.
+Curriculum officiel S2 (racine `S2/`) = structure, pas du matériel uploadé.

@@ -13,3 +13,8 @@ awk -F'\t' 'NR>1 && $5=="S1/Structure-de-machine-1" && $7=="TD"{print $12, "("$1
 # examens récents avec corrigé appareillé :
 awk -F'\t' 'NR>1 && $7=="EXAM_CORRECTION"{print $12}' resources/incoming/study-materials/notes/inventory.tsv
 ```
+
+## ⚠️ Périmètre du lot (2026-09-21)
+Archive d'étude actuelle = **S1 uniquement**. **Archive d'étude S2 : pas encore uploadée.**
+Ne jamais classer/présenter une pièce du lot comme « matériau S2 » ; contenu ambigu → `organized/UNCLASSIFIED/`.
+Curriculum officiel S2 (racine `S2/`) = structure, pas du matériel uploadé.

@@ -5,3 +5,8 @@
    énoncé repris fidèlement, étapes complètes, résultats encadrés, méthodes alternatives brèves, pièges.
 4. Rigueur : en analyse (limites, DL, intégrales) et algèbre (Z/nZ, espaces vectoriels), vérifier les calculs (ordre des DL, conditions d'appliquer un théorème) ; si un doute subsiste, l'écrire.
 5. Barème simulé = annoncé comme simulé.
+
+## ⚠️ Périmètre du lot (2026-09-21)
+Archive d'étude actuelle = **S1 uniquement**. **Archive d'étude S2 : pas encore uploadée.**
+Ne jamais classer/présenter une pièce du lot comme « matériau S2 » ; contenu ambigu → `organized/UNCLASSIFIED/`.
+Curriculum officiel S2 (racine `S2/`) = structure, pas du matériel uploadé.

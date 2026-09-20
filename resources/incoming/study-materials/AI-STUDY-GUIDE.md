@@ -3,6 +3,10 @@
 > Ce fichier enseigne à un agent IA (moi, ou un futur agent) comment exploiter CE dépôt.
 > Il ne décrit AUCUNE capacité plateforme : uniquement des fichiers et conventions locales.
 
+## 0. PÉRIMÈTRE DU LOT ACTUEL — lire en premier
+- **Archive d'étude uploadée = S1 UNIQUEMENT** (627 fichiers, correction du 2026-09-21). `organized/` ne contient que `S1/<module>/…` et `UNCLASSIFIED/`.
+- **Aucun matériel d'étude S2 n'existe dans le dépôt** : si un étudiant demande du S2, distinguer (a) le cursus officiel S2 (racine `S2/` — structure, plans) et (b) l'archive d'étude S2 = *« pas encore uploadée »*. Ne JAMAIS présenter une pièce de ce lot comme un cours/examen S2, même si son contenu ressemble à un programme S2 (les cas ambigus sont en `UNCLASSIFIED/` en attendant le lot S2).
+
 ## 1. Structure du dépôt
 ```
 S1/, S2/                     → Cursus officiel vérifié (module → chapitre → plan de study). NE JAMAIS modifier.
@@ -12,7 +16,7 @@ Corrections/ Examens/ Exercices/ Fiches/ → Note pédagogique de la base de con
 resources/incoming/study-materials/
   raw/                       → 16 ZIP d'origine FOURNIS PAR L'UTILISATEUR (Telegram). Sacrés : jamais modifier/renommer/supprimer.
   extracted/                 → Extraction brute (locale, régénérable, hors git).
-  organized/                 → ARCHIVE DE TRAVAIL intégrée : S1/<module>/<Type>/fichier (528 copies canoniques vérifiées).
+  organized/                 → ARCHIVE DE TRAVAIL : `S1/<module>/<Type>/` + `UNCLASSIFIED/` uniquement (lot S1 ; S2 = à venir). 528 copies canoniques vérifiées.
   notes/inventory.tsv        → REGISTRE MAÎTRE 19 colonnes, 627 lignes, 1 fichier = 1 ligne.
   notes/archive-inventory.tsv→ Les 16 conteneurs ZIP (SHA-256 réels).
   notes/module-map.md        → Cursus ↔ archive : compteurs, types, années, sous-topiques par module.
@@ -25,15 +29,16 @@ STUDY-HUB.md (racine)        → Entrée humaine : par module, ce qui existe et 
 ```
 
 ## 2. Mapping semestre/module (autorités)
+ATTENTION : les 627 fichiers du lot = S1 uniquement ; un contenu « qui ressemble à du S2 » reste en UNCLASSIFIED (ne pas déduire S2).
 - S1 (curriculum racine) : 01-Analyse-1 · 02-Algebre-1 · 03-Algorithmique-1 · 04-Structure-de-machine-1 · 05-Logiciels-libres · 06-Electricite-generale · 07-Anglais-1 · 08-Histoire.
 - S2 : 01-Analyse-2 · 02-Algebre-2 · 03-Algorithmique-2 (ASD-2) · 04-Structure-de-machine-2 · 05-Logique-mathematique · 06-Introduction-IA · 07-Electronique-generale · 08-Citoyennete-et-patriotisme.
-- Archive d'étude : `organized/S1/<Module>/…`, noms alignés (Algorithmique-ASD-1 = module 03 S1 ; Anglais-1-TCE-1 = module 07 S1 ; ASD-2 = module 03 S2).
+- Archive d'étude : `organized/S1/<Module>/…` (+ `organized/UNCLASSIFIED/`). **Pas d'archive S2 à date.** Les noms sont alignés (Algorithmique-ASD-1 = module 03 S1 ; Anglais-1-TCE-1 = module 07 S1).
 - **Ne jamais mélanger S1 et S2, ni L1-SI avec MIAGE/MBD.** « Analyse » sans numéro ≠ Analyse-2 : vérifier le contenu ; si ambigu → `UNCLASSIFIED`.
 
 ## 3. Où trouver quoi
 | Besoin | Emplacement |
 |---|---|
-| Cours / chapitres | `organized/<sem>/<module>/Cours/` |
+| Cours / chapitres | `organized/S1/<module>/Cours/` |
 | TD | `…/TD/` · Séries d'exercices : `…/Series/` · TP : `…/TP/` |
 | Examens | `…/Examens/` · Corrigés & examens+corrige : `…/Corriges/` |
 | Résumés / fiches | `…/Revisions/` |

@@ -6,7 +6,7 @@ traitée, vérifiée et intégrée : **627 fichiers réels** → **528 copies ca
 
 ## Contenu
 - `raw/` — **les 16 ZIP originaux, immuables** (SHA-256 dans `notes/archive-inventory.tsv`).
-- `organized/S1|S2/<module>/<Type>/` — copies de travail, prêtes à parcourir sur GitHub (Cours, TD, TP, Series, Examens, Corriges, Revisions, Supports, Autres) + `organized/UNCLASSIFIED/`.
+- `organized/S1/<module>/<Type>/` + `organized/UNCLASSIFIED/` — copies de travail (**lot S1 UNIQUEMENT**, corrigé 2026-09-21 ; `organized/S2/` n'existe pas : le lot S2 sera uploadé plus tard), prêtes à parcourir sur GitHub (Cours, TD, TP, Series, Examens, Corriges, Revisions, Supports, Autres) + `organized/UNCLASSIFIED/`.
 - `extracted/` — extraction brute locale (hors git, régénérable via `python3 process-incoming.py`).
 - `notes/` — registres : `inventory.tsv` (maître, 19 colonnes × 627), `archive-inventory.tsv`, `module-map.md`, `study-index.md`, `material-coverage.md`, `reconciliation.md`, sauvegardes d'états antérieurs.
 - `AI-STUDY-GUIDE.md` — protocole complet pour agents IA. `PROCESSING.md` — contrat de traitement.

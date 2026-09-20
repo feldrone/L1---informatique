@@ -4,3 +4,8 @@
 3. Étiqueter clairement en-tête : « EXAMEN BLANC — simulation non officielle, générée par l'agent. Durée/barème simulés. »
 4. Joindre un barème détaillé et la correction (CORRECTION MODE) dans un second message ou fichier.
 5. Interdits : ne jamais laisser croire à un sujet officiel/fuité ; ne pas inventer de date de session réelle.
+
+## ⚠️ Périmètre du lot (2026-09-21)
+Archive d'étude actuelle = **S1 uniquement**. **Archive d'étude S2 : pas encore uploadée.**
+Ne jamais classer/présenter une pièce du lot comme « matériau S2 » ; contenu ambigu → `organized/UNCLASSIFIED/`.
+Curriculum officiel S2 (racine `S2/`) = structure, pas du matériel uploadé.

@@ -7,3 +7,8 @@
 | Scan illisible | PDF_NO_TEXT_LAYER | « scan sans couche texte — non analysable ici, à consulter manuellement » |
 | Généré par l'agent | explications, examens blancs, corrigés produits | « contenu pédagogique généré, non officiel » |
 Règles : ne jamais élever une copie partagée au rang d'« officiel » ; ne jamais dire que l'agent a téléchargé/vérifié en ligne ce qu'il n'a pas ; SHA-256 et dates d'upload ne sont pas des preuves d'année d'enseignement ; une incertitude se dit, pas se comble.
+
+## ⚠️ Périmètre du lot (2026-09-21)
+Archive d'étude actuelle = **S1 uniquement**. **Archive d'étude S2 : pas encore uploadée.**
+Ne jamais classer/présenter une pièce du lot comme « matériau S2 » ; contenu ambigu → `organized/UNCLASSIFIED/`.
+Curriculum officiel S2 (racine `S2/`) = structure, pas du matériel uploadé.
