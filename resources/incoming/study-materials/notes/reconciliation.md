@@ -29,3 +29,21 @@
 1. **2 ZIP en racine du dépôt GitHub** (`L1---informatique-part-01.zip`, `L1---informatique-part-07.zip`) : blobs **byte-identiques** à leurs jumeaux de `raw/` (sha1 git `a488e05c…`, `38cc621a…`). Doublons de dépôt — je ne supprime rien ; à purger via l'interface GitHub si vous le souhaitez.
 2. Taille totale mesurée : 350,5 Mo (ZIP) vs 432 Mo annoncés ; les tailles exactes par archive sont dans `notes/archive-inventory.tsv`.
 3. Le dépôt Git contient les originaux (`raw/*.zip` = source canonique). `extracted/` et `organized/` (≈ 377 Mo chacun, locaux) sont des **sorties régénérables** par `python3 process-incoming.py` ; elles ne sont pas poussées sur GitHub pour ne pas dupliquer ~334 Mo de blobs déjà inclus dans les ZIP — l'inventaire 16 colonnes référence les chemins exacts des deux côtés.
+
+---
+
+## Addendum Phase 2 (intégration, 2026-09-21)
+
+| État | Compteurs |
+|---|---:|
+| Fichiers traités (Phase 1) | **627** |
+| Copies canoniques placées dans `organized/` (nouveau schéma 16 modules + UNCLASSIFIED) | **528** |
+| Doublons exacts : liés à leur canonique, **non recopiés** (volontaire, cf. Phase 5 de la mission) | **99** |
+| Doublons probables (hash différent, contenu quasi-identique) : conservés et copiés | 2 (inclus dans 528) |
+| Échecs d'extraction / non-plaçables | **0** |
+| Équation | 528 + 99 = **627** ✓ |
+| Copies vérifiées sur disque + SHA-256 re-contrôlés après copie | **528/528** ✓ |
+| Paires examen↔correction reliées | 9 |
+| Sous-topiques détectés par module | voir `notes/module-map.md` |
+
+Arborescence : un dossier par module officiel, sous-dossiers de type créés à l'usage (Cours, TD, TP, Series, Examens, Corriges, Revisions, Supports, Autres). `raw/` et `extracted/` inchangés ; l'inventaire 16 colonnes de la Phase 1 est archivé dans `notes/inventory-v1-backup.tsv`, le registre courant passe à 19 colonnes (+subtopic, +integration_status, +canonical_info).
