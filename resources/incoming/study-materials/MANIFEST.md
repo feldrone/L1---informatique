@@ -133,3 +133,13 @@ SM2 Série 1 + Corrigé 1 + Série 2 (TD 1478, 2019-2020).
 Bilan cumulé captures : 10 fichiers .md (3 de la 3e passe + 7 ici). Documents officiels inventoriés avec nom+URL : 33 (+22 Telegram metadata-only, statuts inchangés).
 Restent accessibles NON capturés (raison unique : limite de contexte de session) : Série 3 SM2, Corrigés 2-3, solutions détaillées (PPT non textuels), pages Analyse1/2, Algèbre1/2, ASD1/2, Histoire, doc 65158.
 Deux notes d'analyse créées (read-only) : notes/curriculum-coverage.md, notes/programme-conflicts.md.
+
+## 2026-09-21 — Système de traitement du dépôt + publication finale
+Ajouté : `organized/` (16 modules S1/S2 + UNCLASSIFIED, copies triées), `inventory.tsv`
+(11 colonnes machine : original_filename, sha256, module, semester, material_type,
+academic_year, source, provenance, classification_confidence, organized_location,
+duplicate_status), `PROCESSING.md` (contrat de traitement en 12 étapes, invariants :
+raw/ immuable, curriculum protégé, jamais de faux originaux), `raw-index.py` (sha256 +
+signatures + doublons exacts — testé hors dépôt). raw/ reste le DROP ZONE unique :
+dépôt en vrac accepté, tri automatisé par contenu. Aucun matériel réel n'existait encore
+à classer (raw/ vide de fichiers réels —documenté, non fabriqué).
