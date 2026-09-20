@@ -25,7 +25,7 @@
 - Source universitaire : 1 OFFICIAL_UBMA, 265 PUBLIC_UNIVERSITY, 361 UNKNOWN. Provenance des 627 : **TELEGRAM_USER_PROVIDED** (fichiers fournis par l'utilisateur via le dépôt ; je n'ai rien téléchargé moi-même).
 - Par archive : part-01: 69 · 02: 41 · 03: 200 · 04: 34 · 05: 23 · 06: 97 · 07: 51 · 08: 29 · 09: 12 · 10: 12 · 11: 14 · 12: 12 · 13: 8 · 14: 5 · 15: 17 · 16: 3 = **627** ✓
 
-## Anomalies documentées (non corrigées, règle d'immutabilité)
+## Anomalies documentées (non corrigées, règle'immutabilité)
 1. **2 ZIP en racine du dépôt GitHub** (`L1---informatique-part-01.zip`, `L1---informatique-part-07.zip`) : blobs **byte-identiques** à leurs jumeaux de `raw/` (sha1 git `a488e05c…`, `38cc621a…`). Doublons de dépôt — je ne supprime rien ; à purger via l'interface GitHub si vous le souhaitez.
 2. Taille totale mesurée : 350,5 Mo (ZIP) vs 432 Mo annoncés ; les tailles exactes par archive sont dans `notes/archive-inventory.tsv`.
 3. Le dépôt Git contient les originaux (`raw/*.zip` = source canonique). `extracted/` et `organized/` (≈ 377 Mo chacun, locaux) sont des **sorties régénérables** par `python3 process-incoming.py` ; elles ne sont pas poussées sur GitHub pour ne pas dupliquer ~334 Mo de blobs déjà inclus dans les ZIP — l'inventaire 16 colonnes référence les chemins exacts des deux côtés.
