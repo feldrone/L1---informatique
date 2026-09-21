@@ -36,6 +36,12 @@ Non vérifié dans les sources officielles consultées.
 ## Programme
 Chapitrage officiel : non vérifié dans les sources consultées.
 
+## Programme — éléments de preuve officiels (2019-2020 & 2020-2021 — classe B)
+> Deux référentiels UBMA concordants : cours SM1 2019-20 (captures `../../resources/incoming/study-materials/captures/official-elearning/`) et « Programme de la Matière SM 1 » 2020-21 (pluginfile 123940 ; capture `../../resources/incoming/study-materials/evidence/ubma-si-lmd-2026-09/capture-sm1-programme-officiel-2020-2021.md`).
+- **Bornes S1 vérifiées** : Ch 1 introduction · Ch 2 systèmes de numération (déc/binaire/oct/hex + opérations binaires) · Ch 3 représentation de l'information (binaire pur, Gray, DCB, excédentaire de 3 ; ASCII/EBCDIC/UTF ; entiers signés / complément à 1 / à 2 ; virgule fixe & flottante IEEE 754) · Ch 4 algèbre de Boole (axiomes, NAND/NOR/XOR, formes normales, simplification **Karnaugh + Quine-McCluskey**).
+- **Ne pas placer en S1** : additionneurs/multiplexeurs/décodeurs, bascules, registres, mémoires, automates, compteurs, circuits intégrés → SM2 (S2) — preuve : `../../resources/incoming/study-materials/evidence/ubma-official-2026-09/capture-SM2-programme-officiel-2019-2020.md`.
+- « Machine pédagogique » : **NOT VERIFIED** (aucune occurrence dans toute source UBMA consultée à ce jour).
+
 ## CM
 Volume horaire : non vérifié dans les sources officielles consultées.
 

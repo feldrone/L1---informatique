@@ -28,6 +28,11 @@ Non vérifié dans les sources officielles consultées.
 ## Programme
 Chapitrage officiel : non vérifié dans les sources consultées.
 
+## Programme — élément de preuve officiel (ère tronc commun MI, 2020-2021 — classe B)
+> Chapitrage du « Programme de la Matière Algèbre 1 » (pluginfile 123942 ; capture : `../../resources/incoming/study-materials/evidence/ubma-si-lmd-2026-09/capture-algebre1-programme-officiel-2020-2021.md`). Ne vaut pas arrêté SINF courant.
+- Ch 1 logique · Ch 2 ensembles et applications · Ch 3 relations binaires · Ch 4 structures algébriques (groupes/anneaux/corps ; ℤ/nℤ, S₃, ℤ/pℤ) · Ch 5 **anneau des polynômes**.
+- Arithmétique dans ℤ : **NOT VERIFIED** comme chapitre S1 (absente des référentiels officiels consultés) → le matériau `➕ SUPPLEMENTAIRE` du dépôt reste en place, sans étiquette « confirmé ». Les nombres complexes **ne sont pas** un chapitre d'Algèbre 1 dans ce référentiel (ils sont Ch II d'Analyse 1) — cf. divergence documentée `notes/reconciliation.md`.
+
 ## CM
 1 heure/semaine — valeur lue dans le Catalogue des formations (extraction PDF), à confirmer.
 

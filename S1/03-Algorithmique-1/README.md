@@ -44,6 +44,12 @@ Non vérifié dans les sources officielles consultées.
 ## Programme
 Chapitrage officiel : non vérifié dans les sources consultées.
 
+## Programme — élément de preuve officiel (ère tronc commun MI, 2020-2021 — classe B)
+> Chapitrage du « Programme de la Matière ASD 1 » (pluginfile 123939, 2ᵉ version ; capture : `../../resources/incoming/study-materials/evidence/ubma-si-lmd-2026-09/capture-asd1-programme-officiel-2020-2021.md`). Ne vaut pas arrêté SINF courant.
+- Ch 1 introduction · Ch 2 algorithme séquentiel simple (+ traduction en C) · Ch 3 structures conditionnelles · Ch 4 boucles (Tant que / Répéter / Pour / imbriquées) · Ch 5 tableaux et chaînes de caractères · Ch 6 types personnalisés (énumérations, enregistrements).
+- Les 5 thèmes de la liste « user-supplied » (séquentiel/conditionnelles/boucles/tableaux-types) **correspondent** à Ch 2→Ch 6 → statut relevé de « REQUIRES OFFICIAL VERIFICATION » à « SOUTENU (classe B, 2020-21) ».
+- Deux fichiers « nombres complexes » indexés sous ce module sont `CROSS_MODULE_MATERIAL` (cf. `../../resources/incoming/study-materials/notes/material-gap-matrix.md` §E) — non déplacés.
+
 ## CM
 Volume horaire : non vérifié dans les sources officielles consultées.
 

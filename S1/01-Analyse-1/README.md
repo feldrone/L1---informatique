@@ -29,6 +29,13 @@ Non vérifié dans les sources officielles consultées (le descriptif détaillé
 ## Programme
 Chapitrage officiel : non vérifié dans les sources consultées. À relever dans la fiche descriptive du module (canevas) publiée par le département, si disponible.
 
+## Programme — élément de preuve officiel (ère tronc commun MI, 2020-2021 — classe B)
+> Chapitrage du « Programme de la Matière Analyse 1 » publié sur la plateforme officielle UBMA
+> (pluginfile 123941 ; capture : `../../resources/incoming/study-materials/evidence/ubma-si-lmd-2026-09/capture-analyse1-programme-officiel-2020-2021.md`).
+> Soutient la structure de révision ; **ne vaut pas arrêté SINF 2026-27** — le chapitrage SINF courant reste « non publié » ci-dessus.
+- Ch I Corps des réels · **Ch II Corps des nombres complexes** · Ch III Suites · Ch IV Fonctions réelles (limites, continuité, Landau) · Ch V Fonctions dérivables (dont **formule de Taylor**) · Ch VI Fonctions élémentaires (ln, exp, puissance, hyperboliques).
+- Conséquences d'indexation : les fichiers « nombres complexes » relèvent d'Analyse 1 (deux copies actuellement sous ASD-1 : `CROSS_MODULE_MATERIAL`, non déplacées, cf. `../../resources/incoming/study-materials/notes/material-gap-matrix.md` §E). Intégration/primitives : **non établies en S1** (relevant d'Analyse 2 dans les référentiels récupérés).
+
 ## CM
 2 heures/semaine — valeur lue dans le Catalogue des formations (extraction PDF), à confirmer sur le document original.
 
