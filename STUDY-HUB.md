@@ -3,7 +3,7 @@
 > 🚨 **Périmètre actuel : le lot de matériel d'étude uploadé est S1 UNIQUEMENT** (correction du 2026-09-21). Le lot S2 suivra dans une phase séparée après upload dédié.
 
 > Entrée unique pour étudier avec ce dépôt. Cursus officiel : `S1/`, `S2/`, `resources/PROGRAMME.md`.
-> Archive de travail — **LOT S1** (cours/TD/examens réels partagés) : `resources/incoming/study-materials/organized/` — **627 fichiers traités** (16 ZIP fournis par des étudiants) → **528 copies canoniques classées** (327 en modules S1 + 201 UNCLASSIFIED) et 99 doublons exacts référencés.
+> Archive de travail — **LOT S1** (cours/TD/examens réels partagés) : `resources/incoming/study-materials/organized/` — **627 fichiers traités** (16 ZIP fournis par des étudiants) → **528 copies canoniques classées** (micro-fix 2026-09-21 : Algèbre-1 21 · Algorithmique-ASD-1 100 — examen d'algèbre relocalisé sur preuve de contenu) (327 en modules S1 + 201 UNCLASSIFIED) et 99 doublons exacts référencés.
 > Pour un agent IA : `resources/incoming/study-materials/AI-STUDY-GUIDE.md` + `.github/skills/l1-study/`.
 
 **Comment réviser un chapitre** : 1) ouvrir le plan de cours officiel du module (dossier racine), 2) ci-dessous, suivre le module → `Cours/` HIGH-confiance, 3) refaire `TD/`+`Series/`, 4) chronométrer un `Examens/`, se corriger avec `Corriges/` (paires liées dans `notes/study-index.md`).
@@ -14,8 +14,8 @@
 | Module | Documents | Cours | TD/Séries | TP | Examens | Corrigés | Résumés | Années | Accès |
 |---|---:|---:|---:|---:|---:|---:|---:|---|---|
 | Analyse 1 | 96 | 5 | 14 | — | 36 | 20 | 2 | 2022-2023 · 2023-2024 · 2024-2025 · 2025-2026 | [96 docs](resources/incoming/study-materials/organized/S1/Analyse-1/) |
-| Algèbre 1 | 20 | — | 1 | — | 11 | 5 | 2 | 2018-2019 · 2019-2020 · 2021-2022 · 2022-2023 | [20 docs](resources/incoming/study-materials/organized/S1/Algebre-1/) |
-| Algorithmique / ASD 1 | 101 | 17 | 21 | 5 | 10 | 10 | 1 | 2022-2023 · 2023-2024 · 2024-2025 · 2025-2026 | [101 docs](resources/incoming/study-materials/organized/S1/Algorithmique-ASD-1/) |
+| Algèbre 1 | 21 | — | 1 | — | 11 | 6 | 2 | 2018-2019 · 2019-2020 · 2021-2022 · 2022-2023 | [21 docs](resources/incoming/study-materials/organized/S1/Algebre-1/) |
+| Algorithmique / ASD 1 | 100 | 17 | 21 | 5 | 9 | 10 | 1 | 2022-2023 · 2023-2024 · 2024-2025 · 2025-2026 | [100 docs](resources/incoming/study-materials/organized/S1/Algorithmique-ASD-1/) |
 | Structure de machine 1 | 63 | 7 | 14 | 2 | 15 | 7 | — | 2022-2023 · 2023-2024 · 2024-2025 · 2025-2026 | [63 docs](resources/incoming/study-materials/organized/S1/Structure-de-machine-1/) |
 | Électricité générale | 1 | 1 | — | — | — | — | — | — | [1 docs](resources/incoming/study-materials/organized/S1/Electricite-generale/) |
 | Logiciels libres | 21 | 10 | — | 1 | — | — | 5 | 2025-2026 | [21 docs](resources/incoming/study-materials/organized/S1/Logiciels-libres/) |

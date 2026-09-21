@@ -66,3 +66,11 @@ Arborescence : un dossier par module officiel, sous-dossiers de type créés à 
 | Registre d'avant-correction archivé | `notes/inventory-pre-s1only.tsv` |
 
 Compte final : 627 = 394 copies en modules S1 + 134 copies UNCLASSIFIED (528 placées) + 99 doublons exacts liés + 2 doublons probables (comptés dans les 528) + 0 non-plaçable + **0 fichier d'étude S2**. Cursus officiel S2 intact et séparé (règle : ne jamais confondre structure du cursus et matériel uploadé).
+
+---
+
+## Addendum micro-fix (2026-09-21 — audit S1)
+
+1. **Fichier relocalisé** : `organized/S1/Algorithmique-ASD-1/Examens/Examen d’algèbre 2025 – Solution.pdf` → `organized/S1/Algebre-1/Corriges/…` (copie puis suppression de l'ancienne copie ; SHA-256 avant = après = `0a801482f8461128efba68f7aa0be7c311ebae047920fb9f515ba8bcf5769d7a`). Preuve : page 1 « 1st Year Preparatory Cycle — Algebra 1 — Semester : 01 — Final Exam Solution ». Ligne d'inventaire mise à jour (module, type EXAM_CORRECTION, confiance HIGH justifiée, note).
+2. **10 liens de paires périmés réparés** (références `organized/S2/Structure-de-machine-2/Corriges/…` héritées d'avant le déplacement S1-only) → réindexés vers les emplacements actuels vérifiés (`S1/Structure-de-machine-1/Corriges/Examen{1,2,3,4}…`, `UNCLASSIFIED/Autres/Examen9…`) ; segments dupliqués nettoyés. Après réparation : 18 liens `pair-*`, 0 chemin inexistant, réciprocité complète des 6 paires réelles.
+3. Rien d'autre touché : `raw/` 16/16 intact, `extracted/` intact, contenu des 528 copies inchangé (une seule copie déplacée), curriculum 0 modification.
