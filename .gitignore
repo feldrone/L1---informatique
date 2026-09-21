@@ -1,0 +1,16 @@
+# Systèmes / éditeurs
+.DS_Store
+Thumbs.db
+*.tmp
+~$*
+.ipynb_checkpoints/
+
+# Binaire de travail non versionné
+*.zip
+*.7z
+*.iso
+*.exe
+
+# Espaces de travail légers
+.vscode/
+.idea/

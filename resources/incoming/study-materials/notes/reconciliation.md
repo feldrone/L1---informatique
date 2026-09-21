@@ -1,0 +1,76 @@
+# Réconciliation des comptes — traitement du 2026-09-20
+
+## Conteneurs (matière première fournie par l'utilisateur, dépôt `raw/`)
+- 16 archives ZIP, total **350 550 096 octets** (334,3 Mio) — l'estimateur « 432 Mo » est **corrigé** par le mesuré.
+- Intégrité : `unzip -t` + CRC python → 16/16 **OK**, 0 corrompue, 0 protégée par mot de passe.
+- Chaque archive extraite dans `extracted/L1---informatique-part-NN/` ; `raw/` **intacte** (SHA-256 vérifiés avant/après, cf. notes/archive-inventory.tsv).
+
+## Équation des comptes
+| Étape | Compte |
+|---|---:|
+| Fichiers membres dans les 16 ZIP (somme des inventaires) | **627** |
+| Conteneurs imbriqués (.zip/.rar/.7z dans les ZIP) | **0** |
+| Fichiers réellement extraits sur disque (`find extracted -type f`) | **627** |
+| Lignes de `notes/inventory.tsv` (16 colonnes, 100 % couverture) | **627** |
+| Copies dans `organized/` (doublons conservés, rien supprimé) | **627** |
+
+→ **627 = 627 = 627 = 627 = 627.** L'estimation « ~670 fichiers » est ramenée au chiffre prouvé **627**.
+
+## Ventilation
+- Semestres : S1 **355** · S2 **108** · UNCLASSIFIED **164** (total 627 ✓)
+- Confiance : HIGH **296** · MEDIUM **116** · LOW **215** (total 627 ✓)
+- Doublons : 526 nouveaux · **99 doublons exacts** (même SHA-256) · **2 doublons probables** (même contenu, hash différent) — tous conservés, aucun supprimé.
+- Contenu : 104 PDF sans couche texte (scans ; **pas d'OCR** — aucun outil OCR promis ni installé), 0 archive bloquée, 0 échec d'extraction.
+- Année académique : **234** avec preuve textuelle explicite (2025-2026: 67, 2024-2025: 39, 2023-2024: 29, 2019-2020: 23, 2022-2023: 22, 2021-2022: 19…) · 393 `ACADEMIC_YEAR_UNKNOWN` (dont 155 nombres 4-chiffres « nus » dans le texte **refusés** comme preuve, conformément à la règle d'âge académique strict).
+- Source universitaire : 1 OFFICIAL_UBMA, 265 PUBLIC_UNIVERSITY, 361 UNKNOWN. Provenance des 627 : **TELEGRAM_USER_PROVIDED** (fichiers fournis par l'utilisateur via le dépôt ; je n'ai rien téléchargé moi-même).
+- Par archive : part-01: 69 · 02: 41 · 03: 200 · 04: 34 · 05: 23 · 06: 97 · 07: 51 · 08: 29 · 09: 12 · 10: 12 · 11: 14 · 12: 12 · 13: 8 · 14: 5 · 15: 17 · 16: 3 = **627** ✓
+
+## Anomalies documentées (non corrigées, règle d'immutabilité)
+1. **2 ZIP en racine du dépôt GitHub** (`L1---informatique-part-01.zip`, `L1---informatique-part-07.zip`) : blobs **byte-identiques** à leurs jumeaux de `raw/` (sha1 git `a488e05c…`, `38cc621a…`). Doublons de dépôt — je ne supprime rien ; à purger via l'interface GitHub si vous le souhaitez.
+2. Taille totale mesurée : 350,5 Mo (ZIP) vs 432 Mo annoncés ; les tailles exactes par archive sont dans `notes/archive-inventory.tsv`.
+3. Le dépôt Git contient les originaux (`raw/*.zip` = source canonique). `extracted/` et `organized/` (≈ 377 Mo chacun, locaux) sont des **sorties régénérables** par `python3 process-incoming.py` ; elles ne sont pas poussées sur GitHub pour ne pas dupliquer ~334 Mo de blobs déjà inclus dans les ZIP — l'inventaire 16 colonnes référence les chemins exacts des deux côtés.
+
+---
+
+## Addendum Phase 2 (intégration, 2026-09-21)
+
+| État | Compteurs |
+|---|---:|
+| Fichiers traités (Phase 1) | **627** |
+| Copies canoniques placées dans `organized/` (nouveau schéma 16 modules + UNCLASSIFIED) | **528** |
+| Doublons exacts : liés à leur canonique, **non recopiés** (volontaire, cf. Phase 5 de la mission) | **99** |
+| Doublons probables (hash différent, contenu quasi-identique) : conservés et copiés | 2 (inclus dans 528) |
+| Échecs d'extraction / non-plaçables | **0** |
+| Équation | 528 + 99 = **627** ✓ |
+| Copies vérifiées sur disque + SHA-256 re-contrôlés après copie | **528/528** ✓ |
+| Paires examen↔correction reliées | 9 |
+| Sous-topiques détectés par module | voir `notes/module-map.md` |
+
+Arborescence : un dossier par module officiel, sous-dossiers de type créés à l'usage (Cours, TD, TP, Series, Examens, Corriges, Revisions, Supports, Autres). `raw/` et `extracted/` inchangés ; l'inventaire 16 colonnes de la Phase 1 est archivé dans `notes/inventory-v1-backup.tsv`, le registre courant passe à 19 colonnes (+subtopic, +integration_status, +canonical_info).
+
+---
+
+## Addendum correction S1-only (2026-09-21 — Phase « fix »)
+
+**Décision de périmètre** : le lot des 627 fichiers = collection **S1 uniquement** de l'utilisateur ; aucun matériel d'étude S2 n'a été uploadé à date.
+
+| Mesure | Valeur |
+|---|---:|
+| Lignes portant un module S2 avant correction | 108 (90 copies + 18 doublons) |
+| Reclassées vers un module S1 **sur preuve explicite** (nom + contenu relu) | 35 |
+| Reclassées vers UNCLASSIFIED (aucune preuve S1 ; contenu évoquant S2 conservé sans deviner) | 73 |
+| Copies déplacées physiquement dans organized/S1 ou UNCLASSIFIED (SHA-256 revérifié à la copie) | 90 |
+| Liens canoniques de doublons réindexés | 19 |
+| Semestre des 627 lignes | **S1 (627/627)** ; S2 = 0 ; UNCLASSIFIED-semestre = 0 |
+| Dossiers `organized/S2/` restants | **0** (supprimés — copies seulement ; ZIP `raw/` intacts, 16/16 SHA-256) |
+| Registre d'avant-correction archivé | `notes/inventory-pre-s1only.tsv` |
+
+Compte final : 627 = 394 copies en modules S1 + 134 copies UNCLASSIFIED (528 placées) + 99 doublons exacts liés + 2 doublons probables (comptés dans les 528) + 0 non-plaçable + **0 fichier d'étude S2**. Cursus officiel S2 intact et séparé (règle : ne jamais confondre structure du cursus et matériel uploadé).
+
+---
+
+## Addendum micro-fix (2026-09-21 — audit S1)
+
+1. **Fichier relocalisé** : `organized/S1/Algorithmique-ASD-1/Examens/Examen d’algèbre 2025 – Solution.pdf` → `organized/S1/Algebre-1/Corriges/…` (copie puis suppression de l'ancienne copie ; SHA-256 avant = après = `0a801482f8461128efba68f7aa0be7c311ebae047920fb9f515ba8bcf5769d7a`). Preuve : page 1 « 1st Year Preparatory Cycle — Algebra 1 — Semester : 01 — Final Exam Solution ». Ligne d'inventaire mise à jour (module, type EXAM_CORRECTION, confiance HIGH justifiée, note).
+2. **10 liens de paires périmés réparés** (références `organized/S2/Structure-de-machine-2/Corriges/…` héritées d'avant le déplacement S1-only) → réindexés vers les emplacements actuels vérifiés (`S1/Structure-de-machine-1/Corriges/Examen{1,2,3,4}…`, `UNCLASSIFIED/Autres/Examen9…`) ; segments dupliqués nettoyés. Après réparation : 18 liens `pair-*`, 0 chemin inexistant, réciprocité complète des 6 paires réelles.
+3. Rien d'autre touché : `raw/` 16/16 intact, `extracted/` intact, contenu des 528 copies inchangé (une seule copie déplacée), curriculum 0 modification.
