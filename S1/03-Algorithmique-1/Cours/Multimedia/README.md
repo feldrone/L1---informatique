@@ -4,32 +4,34 @@
 « Introduction — bref historique sur l'informatique ; introduction à l'algorithmique »**
 (L1 SINF, Semestre 1, Université Badji Mokhtar — Annaba).
 
-> **Important — statut de la ressource :** cette vidéo **n'est PAS une vidéo officielle de l'UBMA**.
-> C'est une **ressource d'étude supplémentaire, générée automatiquement** (narration TTS + animation
-> rendue par programme), construite à partir du matériel de cours vérifié : le programme officiel ASD 1
-> (document de l'e-learning UBMA 2020-2021) et le document « Chapitre 1 — Introduction à l'algorithmique »
-> (M. Ounnaci, document de cours UBMA). Elle ne remplace ni le cours magistral ni les TD/TP.
+> **Statut :** ressource d'étude **supplémentaire, générée automatiquement** (narration TTS +
+> animation rendue par programme), fidèle au matériel vérifié : programme officiel ASD 1
+> (document e-learning UBMA 2020-2021) et « Chapitre 1 — Introduction à l'algorithmique »
+> (M. Ounnaci). **Ce n'est PAS une vidéo officielle de l'UBMA** ; elle ne remplace ni le
+> cours magistral ni les TD/TP.
 
-## Fiche technique
+## Fiche technique (version 2 — 2026-09-22)
 
 | Champ | Valeur |
 |---|---|
 | Fichier | `lesson1-arabic.mp4` |
-| Durée | ≈ 14 min 53 s (893 s) |
-| Format | MP4 — vidéo H.264 (High, yuv420p, 1280×720 @ 12 fps) + audio AAC |
-| Taille | ≈ 25 Mo |
+| Durée | ≈ 19 min 20 s (1160.19 s) |
+| Format | MP4 — H.264 High, yuv420p, 1280×720 @ 15 fps + AAC (44.1 kHz, mono) |
+| Taille | 33 944 785 octets (≈ 32.4 Mio) |
+| Mux | `+faststart` ; dérive A/V mesurée : 0.01 s ; loudness intégré : −19.5 LUFS, max −1.3 dB (pas d'écrêtage) |
 | Langue | **Arabe** (termes académiques français conservés : algorithme, organigramme, pseudo-code…) |
-| Mux | `+faststart` (lecture progressive correcte en ligne) |
-| SHA-256 | `4fc0dbba19c34f4524c73c9c4f93a0eefe33dc4b863157f2db1569f3ac196753` |
+| SHA-256 | `5b7f567ad1ca16b4df45575f6f80157f73b2a1e789bca9cdade6c2d7bfb550f1` |
+| Version précédente | V1 (14:53, 12 fps, 10 scènes) conservée hors dépôt comme référence ; l'historique Git la conserve aussi (`518417c`) |
 
-## Contenu (10 scènes, calées sur la narration)
+## Contenu (11 scènes synchronisées par mesure de durée)
 
-Titre · الحاسوب والبرنامج (Problem→Algorithm→Program→Machine) · تعريف الخوارزمية ·
-تاريخ (الخوارزمي → Lovelace) والمفارجات · المنهجية (فهم ← تقسيم) · طرق التمثيل والأشكال الستة ·
-المثال pseudocode-انسيابي للوثيقة (`compteur < 4`) · **جدول التنفيذ** (4 itérations, piège off-by-one) ·
-structure (en-tête → déclarations → corps) ·خلاصة.
+Ouverture+objectifs · الحاسوب/البرنامج/la chaîne de résolution · définition mot à mot + 4 conditions ·
+الخوارزمية (humain) vs البرنامج (machine) ·.timeline الخوارزمي→algorisme→Lovelace + 3 paradigmes ·
+interprétation vs compilation (flux animés) · 3 représentations + 6 formes + chaîne de conversion ·
+exemple complet construit (problème→pseudo-code→organigramme) · **tableau d'exécution animé**
+(jauge compteur, piège off-by-one, variantes) · structure en 3 couches + variable/constante + complexité ·
+carte mentale de récapitulation.
 
 ## Objectif
 
-Révision **visuelle et audio** du Chapitre 1 uniquement — la vidéo couvre exactement le périmètre
-de la première leçon du module ; rien des chapitres 2 à 6.
+Révision **visuelle et audio** du Chapitre 1 uniquement — rien des chapitres 2 à 6.
