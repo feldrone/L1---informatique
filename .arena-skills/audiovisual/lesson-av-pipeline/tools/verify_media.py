@@ -43,6 +43,8 @@ def main() -> int:
     ap.add_argument("--max-drift", type=float, default=0.25)
     ap.add_argument("--min-size", type=int, default=0)
     ap.add_argument("--resolution", help="expected WxH, e.g. 1280x720; omit to skip")
+    ap.add_argument("--expect-fps", type=float, help="real frame-rate proof: probe line shows N fps, N tbr AND stream fraction matches")
+    ap.add_argument("--fps-unique", type=int, default=0, metavar="K", help="decode K pairs of CONSECUTIVE frames mid-file; all must differ (anti frame-duplication)")
     a = ap.parse_args()
     ok = True
 
@@ -76,6 +78,39 @@ def main() -> int:
             check("h264 codec", "h264" in v[0], "")
         if a.resolution:
             check(f"resolution {a.resolution}", a.resolution in v[0], "")
+        raw = subprocess.run([ff_exe(), "-i", a.file], capture_output=True, text=True).stderr
+        vline = [ln for ln in raw.splitlines() if "Video:" in ln and "fps" in ln]
+        vline = vline[0] if vline else ""
+        if a.expect_fps:
+            n = a.expect_fps
+            ni = int(n) if abs(n - round(n)) < 1e-6 else None
+            has_fps = ni is not None and f"{ni} fps," in vline
+            has_tbr = ni is not None and f"{ni} tbr" in vline
+            frac = re.search(r"(\d+/\d+) fps", vline)
+            if frac:
+                okfrac = abs(eval(frac.group(1).replace("/", " / ")) - n) < 1e-6
+            else:
+                bare = re.search(r"\b(\d+(?:\.\d+)?) fps", vline)
+                okfrac = bare is not None and abs(float(bare.group(1)) - n) < 1e-6
+            check("real fps (probe fps+tbr)", has_fps and has_tbr, vline.strip()[-60:])
+            check("stream frame-rate fraction", okfrac, frac.group(1) if frac else "bare-rate")
+        if a.fps_unique and a.fps_unique > 0:
+            k = a.fps_unique
+            fr = a.expect_fps or 60.0
+            pairs = 0
+            diff = 0
+            for j in range(k):
+                t = 20.0 + j * max(1.0, (dur - 40.0) / max(k, 1))
+                hs = []
+                for o in (0, 1):
+                    r = subprocess.run([ff_exe(), "-ss", str(t + o / fr), "-i", a.file, "-frames:v", "1",
+                                        "-f", "rawvideo", "-pix_fmt", "gray", "-"], capture_output=True)
+                    hs.append(hashlib.sha256(r.stdout).hexdigest())
+                pairs += 1
+                if hs[0] != hs[1]:
+                    diff += 1
+            check("consecutive frames distinct (no blind duplication)", diff == pairs and pairs > 0,
+                  f"{diff}/{pairs} pairs differ at ~{fr:g} fps")
         with open(a.file, "rb") as f:
             head = f.read(2 << 20)
         moov, mdat = head.find(b"moov"), head.find(b"mdat")
