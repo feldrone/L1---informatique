@@ -114,6 +114,13 @@ export function TodayScreen({ onOpenDay }: { onOpenDay: (date: string) => void }
           subjectLookup={subjectLookup}
           chapterLookup={chapterLookup}
           onOpenFocus={() => navigate('focus')}
+          onRequestComplete={(task) => {
+            setActualMin(task.plannedMin);
+            setDifficulty('ok');
+            setNote('');
+            setActiveRecall(task.type === 'REVISION' || task.type === 'MEMORY');
+            setQuickComplete(task);
+          }}
           emptyTitle={analytics.todayProgress.tasksDone > 0 ? 'Plan complete' : 'No study task planned'}
           emptyDescription={
             analytics.todayProgress.tasksDone > 0

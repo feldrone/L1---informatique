@@ -87,8 +87,11 @@ async function createBrowserDatabase(): Promise<BrowserDatabaseHandle> {
   let pending = false;
   let flushCount = 0;
   let client: BrowserDatabaseHandle;
+  // Writes are strictly serialised: two overlapping IndexedDB writes could persist an older
+  // snapshot after a newer one (stale-handle overwrite, verified in the browser QA pass).
+  let writeChain: Promise<void> = Promise.resolve();
 
-  const flushNow = async (): Promise<void> => {
+  const writeSnapshot = async (): Promise<void> => {
     if (!pending) return;
     pending = false;
     try {
@@ -103,12 +106,26 @@ async function createBrowserDatabase(): Promise<BrowserDatabaseHandle> {
     }
   };
 
+  /**
+   * Persists immediately (history-append operations call this) and waits for any in-flight write,
+   * so a reload right after completing a task can never lose it.
+   */
+  const flushNow = (): Promise<void> => {
+    if (flushTimer) {
+      clearTimeout(flushTimer);
+      flushTimer = null;
+    }
+    writeChain = writeChain.then(writeSnapshot, writeSnapshot);
+    return writeChain;
+  };
+
   const schedule = (): void => {
     pending = true;
     if (flushTimer) clearTimeout(flushTimer);
     flushTimer = setTimeout(() => {
-      void flushNow();
-    }, 350);
+      flushTimer = null;
+      writeChain = writeChain.then(writeSnapshot, writeSnapshot);
+    }, 120);
   };
 
   const db = existing ? new SQL.Database(existing) : new SQL.Database();

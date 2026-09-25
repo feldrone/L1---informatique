@@ -199,7 +199,7 @@ function ChapterView({
                   <span
                     className={cx(
                       'mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full border text-xs',
-                      reached ? 'border-accent bg-accent text-white' : 'border-border text-text-muted',
+                      reached ? 'border-accent bg-accent text-on-accent' : 'border-border text-text-muted',
                     )}
                   >
                     {step.level}

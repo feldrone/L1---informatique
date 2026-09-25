@@ -79,7 +79,7 @@ export function SettingsScreen() {
             aria-selected={tab === id}
             onClick={() => setTab(id)}
             className={cx(
-              'rounded-full border px-3 py-1.5 text-xs transition',
+              'min-h-8 rounded-full border px-3 py-1.5 text-xs transition',
               tab === id ? 'border-accent bg-accent-soft text-accent' : 'border-border text-text-muted hover:text-text',
             )}
           >
@@ -232,7 +232,7 @@ export function SettingsScreen() {
                       })
                     }
                     className={cx(
-                      'rounded-full border px-2.5 py-1 text-xs transition',
+                      'min-h-8 rounded-full border px-3 py-1.5 text-xs transition',
                       active ? 'border-accent bg-accent-soft text-accent' : 'border-border text-text-muted hover:text-text',
                     )}
                   >
@@ -262,18 +262,18 @@ export function SettingsScreen() {
                 />
               </Field>
               <Field label="Day bounds">
-                <div className="flex gap-2">
+                <div className="flex min-w-0 gap-2">
                   <input
                     type="time"
                     value={rules.dayStart}
                     onChange={(event) => save({ dayStart: event.target.value })}
-                    className="w-full rounded-xl border border-border bg-surface-sunken px-3 py-2 text-sm"
+                    className="w-full min-w-0 rounded-xl border border-border bg-surface-sunken px-3 py-2 text-sm"
                   />
                   <input
                     type="time"
                     value={rules.dayEnd}
                     onChange={(event) => save({ dayEnd: event.target.value })}
-                    className="w-full rounded-xl border border-border bg-surface-sunken px-3 py-2 text-sm"
+                    className="w-full min-w-0 rounded-xl border border-border bg-surface-sunken px-3 py-2 text-sm"
                   />
                 </div>
               </Field>
@@ -520,12 +520,18 @@ export function SettingsScreen() {
                 variant="primary"
                 disabled={importText.trim().length === 0}
                 onClick={async () => {
-                  const report = await store.importJson(importText);
-                  setImportReport(
-                    report.errors.length === 0
-                      ? `${report.imported} record group(s) imported successfully.`
-                      : `${report.imported} record group(s) imported, ${report.errors.length} error(s): ${report.errors.slice(0, 3).join('; ')}`,
-                  );
+                  try {
+                    const report = await store.importJson(importText);
+                    setImportReport(
+                      report.errors.length === 0
+                        ? `${report.imported} record(s) imported successfully.`
+                        : report.errors.length > 0 && report.imported === 0
+                          ? `Nothing imported. ${report.errors.slice(0, 3).join('; ')}`
+                          : `${report.imported} record(s) imported, ${report.errors.length} error(s): ${report.errors.slice(0, 3).join('; ')}`,
+                    );
+                  } catch (error) {
+                    setImportReport(`Import failed: ${(error as Error).message}`);
+                  }
                 }}
               >
                 Import backup
@@ -695,7 +701,7 @@ function ClassRow({
             type="time"
             value={slot.startTime}
             onChange={(event) => onSave({ ...slot, startTime: event.target.value })}
-            className="w-full rounded-xl border border-border bg-surface-sunken px-2 py-2 text-sm"
+            className="w-full min-w-0 rounded-xl border border-border bg-surface-sunken px-2 py-2 text-sm"
           />
         </Field>
         <Field label="End">
@@ -703,7 +709,7 @@ function ClassRow({
             type="time"
             value={slot.endTime}
             onChange={(event) => onSave({ ...slot, endTime: event.target.value })}
-            className="w-full rounded-xl border border-border bg-surface-sunken px-2 py-2 text-sm"
+            className="w-full min-w-0 rounded-xl border border-border bg-surface-sunken px-2 py-2 text-sm"
           />
         </Field>
         <Field label="Room / amphi">

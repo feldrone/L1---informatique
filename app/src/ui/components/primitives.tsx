@@ -1,5 +1,6 @@
 /** Shared UI primitives — calm, academic, accessible. */
 
+import { useEffect, useRef, type RefObject } from 'react';
 import type {
   ButtonHTMLAttributes,
   InputHTMLAttributes,
@@ -30,7 +31,7 @@ export function Card({
   return (
     <Tag
       className={cx(
-        'rounded-2xl border border-border bg-surface-raised p-4 shadow-[0_1px_0_rgba(15,23,42,0.04)] sm:p-5',
+        'min-w-0 rounded-2xl border border-border bg-surface-raised p-4 shadow-[0_1px_0_rgba(15,23,42,0.04)] sm:p-5',
         className,
       )}
     >
@@ -58,7 +59,7 @@ export function Button({
   ...rest
 }: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: ButtonVariant; size?: 'sm' | 'md' | 'lg' }) {
   const variants: Record<ButtonVariant, string> = {
-    primary: 'bg-accent text-white hover:brightness-110 border-transparent',
+    primary: 'bg-accent text-on-accent hover:brightness-110 border-transparent',
     secondary: 'bg-surface-sunken text-text hover:bg-accent-soft border-border',
     ghost: 'bg-transparent text-text-muted hover:text-text hover:bg-surface-sunken border-transparent',
     danger: 'bg-transparent text-danger border-danger/40 hover:bg-danger/10',
@@ -216,6 +217,60 @@ export function Select(props: SelectHTMLAttributes<HTMLSelectElement>) {
   return <select {...rest} className={cx(controlClass, 'appearance-none', className)} />;
 }
 
+/**
+ * Shared dialog behaviour: Escape closes, the backdrop closes, focus moves into the dialog and
+ * returns to the trigger afterwards, and Tab stays inside while it is open.
+ * Verified in a real browser: without this the day drawer blocked every pointer event with no
+ * keyboard way out.
+ */
+export function useDialogBehavior(open: boolean, onClose: () => void, ref: RefObject<HTMLElement | null>) {
+  useEffect(() => {
+    if (!open) return;
+    const previouslyFocused = document.activeElement as HTMLElement | null;
+    const node = ref.current;
+    const focusables = (): HTMLElement[] => {
+      if (!node) return [];
+      return Array.from(
+        node.querySelectorAll<HTMLElement>(
+          'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+        ),
+      ).filter((el) => el.getClientRects().length > 0);
+    };
+    const first = focusables()[0];
+    (first ?? node)?.focus({ preventScroll: true });
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        event.stopPropagation();
+        onClose();
+        return;
+      }
+      if (event.key !== 'Tab') return;
+      const list = focusables();
+      if (list.length === 0) return;
+      const firstEl = list[0];
+      const lastEl = list[list.length - 1];
+      if (event.shiftKey && document.activeElement === firstEl) {
+        event.preventDefault();
+        lastEl.focus();
+      } else if (!event.shiftKey && document.activeElement === lastEl) {
+        event.preventDefault();
+        firstEl.focus();
+      }
+    };
+
+    document.addEventListener('keydown', onKeyDown, true);
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.removeEventListener('keydown', onKeyDown, true);
+      document.body.style.overflow = previousOverflow;
+      if (previouslyFocused && typeof previouslyFocused.focus === 'function') previouslyFocused.focus({ preventScroll: true });
+    };
+  }, [open, onClose, ref]);
+}
+
 export function Modal({
   open,
   onClose,
@@ -229,13 +284,22 @@ export function Modal({
   children: ReactNode;
   wide?: boolean;
 }) {
+  const ref = useRef<HTMLDivElement | null>(null);
+  useDialogBehavior(open, onClose, ref);
   if (!open) return null;
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-0 sm:items-center sm:p-6">
+    <div
+      className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-0 sm:items-center sm:p-6"
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget) onClose();
+      }}
+    >
       <div
+        ref={ref}
         role="dialog"
         aria-modal="true"
         aria-label={title}
+        tabIndex={-1}
         className={cx(
           'animate-fade-in-up max-h-[92vh] w-full overflow-y-auto rounded-t-2xl border border-border bg-surface-raised p-4 sm:rounded-2xl sm:p-6',
           wide ? 'sm:max-w-3xl' : 'sm:max-w-lg',

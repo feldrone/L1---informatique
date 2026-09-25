@@ -3,8 +3,8 @@
  * All wording is deliberately non-punitive: "your plan changed", "backlog detected", never "you failed".
  */
 
-import { useMemo, useState } from 'react';
-import { Badge, Button, Card, EmptyState, Field, Select, StatTile, TextArea, cx } from './primitives';
+import { useMemo, useRef, useState } from 'react';
+import { Badge, Button, Card, EmptyState, Field, Select, StatTile, TextArea, cx, useDialogBehavior } from './primitives';
 import { SessionTimeline } from './charts';
 import { useStudy } from '../../state/provider';
 import { formatLongDate, formatMinutes, type ISODate } from '../../domain/date';
@@ -203,7 +203,7 @@ export function DayReviewCard() {
                   )
                 }
                 className={cx(
-                  'rounded-full border px-2.5 py-1 text-xs transition',
+                  'min-h-8 rounded-full border px-3 py-1.5 text-xs transition',
                   active ? 'border-accent bg-accent-soft text-accent' : 'border-border text-text-muted hover:text-text',
                 )}
               >
@@ -245,10 +245,12 @@ export function DayDrawer({
   onClose: () => void;
 }) {
   const { state } = useStudy();
+  const panelRef = useRef<HTMLDivElement | null>(null);
   const day = useMemo(
     () => (date ? state.snapshot : null),
     [date, state.snapshot],
   );
+  useDialogBehavior(date !== null, onClose, panelRef);
   if (!date || !day) return null;
 
   const tasks = day.tasks.filter((t) => t.planDate === date);
@@ -263,14 +265,26 @@ export function DayDrawer({
   const timeline = buildSessionTimeline({ date, sessions: day.sessions, subjects: day.subjects });
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-end bg-black/50" role="dialog" aria-modal="true" aria-label={`Day details ${date}`}>
-      <div className="animate-fade-in h-full w-full max-w-lg overflow-y-auto border-l border-border bg-surface-raised p-4 sm:p-6">
+    <div
+      className="fixed inset-0 z-50 flex justify-end bg-black/50"
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget) onClose();
+      }}
+    >
+      <div
+        ref={panelRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label={`Day details ${date}`}
+        tabIndex={-1}
+        className="animate-fade-in h-full w-full max-w-lg overflow-y-auto border-l border-border bg-surface-raised p-4 sm:p-6"
+      >
         <div className="mb-4 flex items-start justify-between gap-3">
           <div>
             <p className="text-xs tracking-wide text-text-muted uppercase">Day inspection</p>
             <h2 className="text-lg font-semibold">{formatLongDate(date)}</h2>
           </div>
-          <Button variant="ghost" size="sm" onClick={onClose}>
+          <Button variant="ghost" size="sm" onClick={onClose} aria-label="Close day details">
             Close
           </Button>
         </div>

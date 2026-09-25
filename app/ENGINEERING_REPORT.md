@@ -165,13 +165,9 @@ Other verified results:
 
 ## 10. Known limitations (not verified / out of scope)
 
-1. **No real-browser execution available in this environment** (Playwright browser download failed).
-   Therefore: 60 FPS animation smoothness, actual horizontal-overflow behaviour, real keyboard tab
-   order, and pixel-level responsive layout were verified by code review (CSS transforms with
-   GPU-friendly durations, `prefers-reduced-motion` support, `overflow-x-auto` + `min-w-0` containers,
-   `tabIndex`/`role`/`aria-label`s on interactive SVG) and by server-side rendering of every screen —
-   **not** by running a browser. `npm run dev` serves the app (HTTP 200) and all runtime assets
-   resolve, but a human visual pass is still recommended.
+1. ~~No real-browser execution available in this environment~~ — **superseded by §12**: a real
+   Chromium (153.0.8010.0) was launched and the whole surface was driven in it. Non-Chromium engines
+   (Firefox/WebKit) and physical devices remain unverified; see §12.3.
 2. Analytics recompute from the full snapshot after each mutation. This is exact and instant at the
    scale of a semester (hundreds of rows); it has not been benchmarked for tens of thousands of rows.
 3. No backend sync/multi-device support. Data is per browser profile; portability is via
@@ -192,3 +188,156 @@ Other verified results:
 - Commits: `70d0316` (feature), `e751cdc` (single DB handle + targeted chapter updates), `605bbe5`
   (mobile dashboard order). `git status --short --branch` clean, `git diff --check` reports nothing.
 - No force-push, no rebase, no reset, no deletion of pre-existing content.
+
+## 12. Phase 2 — real-browser verification and fixes
+
+Everything in this section was measured on a running application, not inferred from source. The QA
+harness lived outside the repository (`/home/user/.qa-browser`) and is not part of the deliverable.
+
+### 12.1 Environment and method
+
+- **Browser: Chromium 153.0.8010.0**, headless, launched from the npm-bundled binary
+  `@sparticuz/chromium@153.0.0` and driven by `playwright-core@1.63.0`. NSS/NSPR libraries shipped in
+  the same package (`al2023.tar.br`) were exposed through `LD_LIBRARY_PATH`.
+- The `@sparticuz` default arguments include `--single-process` and `--disable-site-isolation-trials`.
+  Those were **dropped** for QA (clean flag set: `--no-sandbox --disable-dev-shm-usage --headless=new
+  --disable-gpu …`) because they make separate browser contexts share storage — see §12.4.
+- Application under test: Vite dev server (`npm run dev`, `http://127.0.0.1:5173`), React 19 in
+  `StrictMode`, real WASM SQLite in the browser.
+- **136 page loads**: 12 screens × 6 viewports (360×800, 390×844, 412×915 with
+  `isMobile`+`hasTouch`; 1280×720, 1440×900, 1920×1080) plus the interaction, accessibility, timer,
+  percentage and persistence runs.
+- 37 screenshots were captured (Dashboard, Today, Weekly plan, Subjects, Analytics, Recovery Center,
+  day-inspection drawer, mobile Dashboard/Today/Analytics, light theme) for before/after comparison.
+  They are QA artefacts and are deliberately **not** committed.
+
+### 12.2 Defects found in the browser and fixed
+
+**P0 — data loss / silent failure**
+
+1. **A task completed and then reloaded within the write debounce was lost.** Fixed by serialising
+   every browser-database write through one chain, clearing the debounce on an explicit flush
+   (350 ms → 120 ms) and forcing a flush after each of the ten mutating store methods. Verified:
+   completing a task and navigating 80 ms later keeps the session (visible in Analytics); five
+   rapid completions followed by an immediate reload keep `2/2`; closing and reopening the profile
+   keeps `2/2`.
+2. **Restoring your own backup failed silently.** Sessions were inserted instead of upserted, so a
+   backup containing an already-present session raised `UNIQUE constraint failed:
+   study_sessions.id`; the transaction rolled back, the error escaped `importJson` and the interface
+   showed an empty report — the button appeared to do nothing. Fixed with `upsertSession`, per-group
+   row validation, and a returned report (`Nothing imported. …` / `Import failed: … Nothing was
+   changed.`). Verified in the browser: importing the same backup twice reports
+   `63 record(s) imported successfully.` both times, 0 page errors. Three regression tests were added
+   (`tests 95 → 98`).
+
+**P1 — broken core behaviour**
+
+3. **The quick-complete dialog was dead code**: task cards never requested it, so the modal could not
+   be opened. Wired through `TaskList.onRequestComplete` on Today. Verified: dialog opens, saves, ring
+   `0 % → 57 %`, tiles `1/2 · 20m logged · 19m effective`, Analytics and the streak update with no
+   reload.
+4. **The modal and the day drawer trapped input**: no Escape, no focus handling, backdrop clicks
+   swallowed. Fixed with one `useDialogBehavior` hook (Escape, backdrop click, focus in, focus
+   restore, Tab trap, scroll lock). Verified: Escape closes both, focus lands inside and returns.
+5. **Focus timer**: the phase change happened inside a `setRemaining` updater (impure updater, unsafe
+   under `StrictMode` double-invocation) and a finished focus block displayed a full `50:00` next to
+   “Session finished”. The transition is now derived in an effect and a finished block keeps `00:00`.
+   Verified with a fake clock: `49:30` → break `10:00` → ready `50:00` → finished `00:00`, saving
+   records 50 m in Today, 0 console warnings.
+6. **Progress-ring inset text crossed the ring stroke** (measured up to **28 px** past the inner
+   radius on desktop and 19 px on mobile; the Analytics caption was clipped vertically). The inset is
+   now padded to the circle, the numeral is smaller and the caption sits under the ring; each ring
+   also states what its percentage is a percentage *of* (“of planned time” / “of decided tasks”),
+   because the two rings legitimately measure different things. Verified with a text-range geometry
+   audit: **0 crossings** on all four rings at 390×844 and 1440×900.
+7. **The Dashboard “Today’s tasks” card contradicted itself** — header “All planned work handled”
+   beside “No study task planned” and a button that would have regenerated finished work. The empty
+   state now distinguishes a completed plan from a missing one.
+
+**P2 — significant UX / accessibility**
+
+8. **Horizontal overflow was masked by `body { overflow-x: hidden }`** (measured document width
+   661 px at a 360 px viewport). The mask was removed and the real causes fixed (`min-w-0` on cards,
+   hero, settings inputs and chart scrollers; `max-width: 100%` on media). Verified: 0 overflowing
+   screens across all 6 viewports.
+9. **Sub-32 px touch targets** (chips, tabs, heatmap cells, month navigation) were raised to ≥32 px;
+   the audit now reports none under 32 px on mobile.
+10. **Contrast**: filled accent buttons and badges were white on `#6C93F5` = **2.95:1**; light-theme
+    accent text on `--color-accent-soft` was 4.26:1 and success text 3.49:1. Added an `--color-on-accent`
+    ink token (dark ink `#08122a` = 6.3:1 on the dark accent; white = 5.6:1 on the deepened light
+    accent `#3357bd`) and deepened light-theme `--color-success` to `#0b7a4b`. Verified by an automated
+    audit: **0 text nodes below WCAG AA** across 10 screens in dark and 5 screens in light.
+11. On desktop the hero card was stretched to the height of the neighbouring task list, leaving about
+    200 px of empty card. `items-start` on the section restored natural heights.
+
+### 12.3 VERIFIED
+
+- **Console / network**: 0 console errors, 0 console warnings, 0 page errors and 0 failed requests
+  across all 136 page loads and every interaction run.
+- **Layout**: no horizontal overflow on any of the 12 screens at 360/390/412/1280/1440/1920.
+- **Navigation and flows (38 assertions, all passing)**: all 10 rail links; Start → Focus timer with
+  the task persisted as running; pause; quick-complete; add-task modal; skip → backlog item visible
+  in Recovery Center; Recovery Center MODE A with 45 m overdue → accept → Today gains
+  `Recovery — Ch I — Le corps des réels (bornes, récurrence, topologie)` (type `recovery`, High, 35 m);
+  day-inspection drawer with real data and Escape to close; daily check-in save + plan regeneration;
+  end-of-day review with blocker chip “Fatigue”; focus session with distraction logged and saved;
+  browser Back returning to `/analytics`.
+- **Arithmetic (12 checks, all passing)**: with known inputs the Today ring reports logged minutes,
+  planned minutes, task counts and `round(100 × logged / planned)` correctly at 0, 1, 25, 50, 75 and
+  100 minutes logged; the same numbers appear in the day drawer; the Analytics ring matches
+  decided-task completion (100 % when every planned task is decided); a heatmap cell reads
+  `2026-09-25: 30 min` for a 30-minute session. Inspected values came from temporary profiles that
+  were discarded afterwards.
+- **Persistence**: a completion 80 ms before navigating survives; five rapid writes survive an
+  immediate reload; data survives closing and reopening the profile; a second, separate profile
+  starts empty (`0/2` tasks, `0m` logged) — i.e. no fabricated history and no cross-profile leak.
+- **Accessibility**: first Tab stop is “Skip to content”; visible focus (`2px solid rgb(108,147,245)`);
+  Enter activates a focused control; Escape closes the quick-complete dialog and the drawer; focus
+  moves into the dialog and is restored; 3 charts expose textual summaries; **0** controls and **0**
+  buttons without an accessible name; status is always conveyed in text, never by colour alone;
+  Recovery Center and Settings are reachable by keyboard only.
+- **Load and responsiveness** (Vite dev server, first navigation, 1440×900): TTFB 3 ms, DOMContentLoaded
+  184–228 ms, first contentful paint 240–304 ms, app shell interactive 542–772 ms, local database ready
+  562–799 ms, with one long task of 221–354 ms during startup (WASM SQLite + first render).
+- **Interaction latency**: the quick-complete dialog appears **19 ms** after the click; after saving,
+  every dependent widget has already updated by the next animation frame (< 16 ms).
+- **Analytics recomputation**: changing range/screen puts the recomputed ring in the DOM in **31–49 ms**.
+- **Animation sampling** (`requestAnimationFrame` deltas at 390×844): ring count-up, drawer opening and
+  modal opening — 71, 153 and 236 samples — average 16.6–16.7 ms, p95 16.7–16.8 ms, worst frame
+  16.8 ms, **0 frames over 33 ms** (display cadence). Under a **4× CPU throttle**: average 21.5 ms
+  (≈47 fps), p95 16.7 ms, worst frame 250 ms, 8 frames over 33 ms, and two long tasks of 103 ms and
+  121 ms on mount.
+- **Empty states and data honesty**: a brand-new profile shows 0 sessions, 0 completions, no streak,
+  an empty heatmap, `Not enough data yet.` for consistency, and the day drawer for an unplanned day
+  states that nothing was planned rather than showing invented numbers.
+
+### 12.4 NOT VERIFIED
+
+- Non-Chromium engines (Firefox, WebKit) and real devices. Mobile layouts were emulated through
+  `isMobile`/`hasTouch` viewports, not a physical phone; iOS Safari specifics are untested.
+- Performance from a production build. Every number above comes from the Vite dev server (uncompressed,
+  module-by-module modules). The production bundle is 509 kB JS (146.75 kB gzip) + 33 kB CSS
+  (6.79 kB gzip); no production Lighthouse/Core Web Vitals run was performed.
+- Frames under heavy concurrency (e.g. recomputing analytics while a chart animates). Only isolated
+  animation samples and single interactions were measured; no frame trace was taken during a
+  deliberately saturated workload.
+- The light theme was screenshot-reviewed on 5 screens (Dashboard, Today, Weekly plan, Analytics,
+  Settings) and contrast-audited programmatically on those 5; the remaining screens were audited in
+  dark mode only.
+- Screen-reader output (NVDA/JAWS/VoiceOver): accessibility was verified structurally and
+  behaviourally, not with an actual screen reader.
+- Long-horizon adaptation quality over a semester — out of reach of any test-suite.
+
+### 12.5 LIMITATIONS of the verification itself
+
+- The percentage matrix (0 → 100 %) needed task/session records that a fresh profile does not have, so
+  they were injected through the app's own JSON import inside throwaway browser profiles. No fake
+  history was written to the repository or to any real profile, the profiles were deleted, and the
+  application's own screens were then audited against the values that were actually imported.
+- One accessibility assertion (“skip link is the first Tab stop”) reports a failure when it runs after
+  other steps in the same page session, because focus state carries over between steps. Run on its own,
+  the first Tab stop is the skip link. This is a limitation of that assertion, not a defect.
+- The browser binary is a serverless-oriented Chromium build. Its default `--single-process` flag made
+  separate Playwright contexts share storage, which first looked like a data-integrity bug; with a
+  clean flag set the second profile is empty. Any future QA on this binary must not use the package's
+  default arguments.

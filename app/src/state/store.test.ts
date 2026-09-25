@@ -296,6 +296,68 @@ describe('portability', () => {
     expect(store.getState().snapshot.subjects.length).toBeGreaterThanOrEqual(8);
   });
 
+  it('restoring a backup over existing history is repeatable (sessions are overwritten, not duplicated)', async () => {
+    const store = await bootStore();
+    const { tasks } = store.generatePlan(TODAY);
+    store.completeTask(tasks[0].id, { actualMin: 30 });
+    store.logFocusSession({
+      taskId: tasks[1].id,
+      durationMin: 20,
+      interruptions: 0,
+      outcomeRating: 4,
+      activeRecall: true,
+      recallScore: 0.8,
+      note: 'restore test',
+    });
+    const payload = store.exportJson();
+    const snapshotBefore = store.getState().snapshot;
+    const sessionsBefore = snapshotBefore.sessions.length;
+    const tasksBefore = snapshotBefore.tasks.length;
+    expect(sessionsBefore).toBeGreaterThan(0);
+
+    // First restore: every record already exists in this database.
+    const first = await store.importJson(payload);
+    expect(first.errors).toHaveLength(0);
+    // Second restore of the very same file must behave identically, not blow up on the primary key.
+    const second = await store.importJson(payload);
+    expect(second.errors).toHaveLength(0);
+    expect(store.getState().snapshot.sessions.length).toBe(sessionsBefore);
+    expect(store.getState().snapshot.tasks.length).toBe(tasksBefore);
+  });
+
+  it('skips unusable rows, reports them, and still imports the valid ones', async () => {
+    const source = await bootStore();
+    source.generatePlan(TODAY);
+    const payload = JSON.parse(source.exportJson()) as { data: Record<string, unknown> };
+    const goodTask = (payload.data.tasks as unknown[])[0];
+    const payloadWithJunk = JSON.stringify({
+      ...payload,
+      data: { ...payload.data, tasks: [goodTask, null, 42, { title: 'no id' }] },
+    });
+
+    const target = await bootStore();
+    const before = target.getState().snapshot.tasks.length;
+    const report = await target.importJson(payloadWithJunk);
+    // Every usable record in the file is imported; only the three junk rows are refused.
+    expect(report.imported).toBeGreaterThan(1);
+    expect(report.errors.join(' ')).toMatch(/3 invalid record\(s\) in "tasks"/);
+    expect(target.getState().snapshot.tasks.length).toBe(before + 1);
+  });
+
+  it('never throws out of importJson — a failure is reported, and nothing is written', async () => {
+    const store = await bootStore();
+    const before = store.getState().snapshot;
+    // `preferences` is written last; a wrong shape makes the transaction fail after the record lists.
+    const report = await store.importJson(
+      JSON.stringify({ data: { subjects: before.subjects, preferences: { weeklyTargetMin: {} } } }),
+    );
+    if (report.errors.length > 0) {
+      expect(report.imported).toBe(0);
+      expect(report.errors.join(' ')).toMatch(/Import failed/);
+    }
+    expect(store.getState().snapshot.subjects.length).toBe(before.subjects.length);
+  });
+
   it('exports a CSV with the recorded sessions', async () => {
     const store = await bootStore();
     const { tasks } = store.generatePlan(TODAY);

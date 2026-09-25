@@ -59,7 +59,7 @@ export function AnalyticsScreen({ onOpenDay }: { onOpenDay: (date: string) => vo
               aria-selected={period === option.key}
               onClick={() => setPeriod(option.key as PeriodKey)}
               className={cx(
-                'rounded-full border px-3 py-1.5 text-xs transition',
+                'min-h-8 rounded-full border px-3 py-1.5 text-xs transition',
                 period === option.key ? 'border-accent bg-accent-soft text-accent' : 'border-border text-text-muted hover:text-text',
               )}
             >
@@ -91,6 +91,7 @@ export function AnalyticsScreen({ onOpenDay }: { onOpenDay: (date: string) => vo
               <ProgressRing
                 percent={summary.completionRate}
                 label={summary.label}
+                percentNote="of decided tasks"
                 primary={
                   <>
                     <span className="tnum block">{formatMinutes(summary.totalMin)} logged</span>

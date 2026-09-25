@@ -184,6 +184,14 @@ export class StudyStore {
     await this.init(client);
   }
 
+  /**
+   * Persists immediately without awaiting. Called after history-append operations (completed task,
+   * logged session, skip, recovery, recall, import) so a reload right after the action keeps it.
+   */
+  private persistNow(): void {
+    void this.handle?.flush().catch(() => undefined);
+  }
+
   async flush(): Promise<void> {
     if (this.handle) await this.handle.flush();
     this.setState({ flushCount: this.handle ? this.handle.flushCount() : 0 });
@@ -587,6 +595,7 @@ export class StudyStore {
         repo.updateChapterReview(chapter.id, task.planDate, addDays(task.planDate, repo.loadPreferences().rules.reviewIntervals[0]), 0);
       }
     }
+    this.persistNow();
     this.bump();
   }
 
@@ -630,6 +639,7 @@ export class StudyStore {
         payloadJson: JSON.stringify({ reason }),
       });
     });
+    this.persistNow();
     this.bump();
   }
 
@@ -799,6 +809,7 @@ export class StudyStore {
         });
       }
     });
+    this.persistNow();
     this.bump();
   }
 
@@ -888,6 +899,7 @@ export class StudyStore {
         if (stored) repo.upsertBacklogItem({ ...stored, state: 'dropped' });
       }
     });
+    this.persistNow();
     this.bump();
   }
 
@@ -967,6 +979,7 @@ export class StudyStore {
         repo.recordMasteryChange(chapterId, date, chapter.mastery, next, 'recall-failure');
       }
     });
+    this.persistNow();
     this.bump();
   }
 
@@ -1005,6 +1018,7 @@ export class StudyStore {
       entityId: input.chapterId ?? '',
       payloadJson: JSON.stringify({ type: input.type, subjectId: input.subjectId }),
     });
+    this.persistNow();
     this.bump();
   }
 
@@ -1013,6 +1027,7 @@ export class StudyStore {
     const mistake = repo.listMistakes().find((m) => m.id === id);
     if (!mistake) return;
     repo.upsertMistake({ ...mistake, resolved, nextReview: resolved ? null : mistake.nextReview });
+    this.persistNow();
     this.bump();
   }
 
@@ -1027,12 +1042,14 @@ export class StudyStore {
       payloadJson: JSON.stringify({ correct: input.correct, total: input.total }),
     });
     if (input.chapterId) this.refreshChapterMastery(input.chapterId, input.date);
+    this.persistNow();
     this.bump();
   }
 
   saveExam(exam: Omit<Exam, 'createdAt'> & { createdAt?: string }): void {
     const repo = this.repository;
     repo.upsertExam({ createdAt: nowISO(), ...exam });
+    this.persistNow();
     this.bump();
   }
 
@@ -1238,45 +1255,55 @@ export class StudyStore {
       return { imported: 0, errors: ['Missing "data" object — expected an export produced by this app.'] };
     }
     const repo = this.repository;
-    repo.transaction(() => {
-      if (Array.isArray(data.subjects)) {
-        data.subjects.forEach((s) => repo.upsertSubject(s));
-        imported += data.subjects.length;
+    let counted = 0;
+    /**
+     * Backup files are user-supplied, so each list is validated before it is written:
+     * usable rows are imported, junk rows are reported and skipped.
+     */
+    const rows = <T>(value: unknown, group: string): T[] => {
+      if (value === undefined || value === null) return [];
+      if (!Array.isArray(value)) {
+        errors.push(`"${group}" is not a list — skipped.`);
+        return [];
       }
-      if (Array.isArray(data.chapters)) {
-        data.chapters.forEach((c) => repo.upsertChapter(c));
-        imported += data.chapters.length;
+      const valid: T[] = [];
+      let skipped = 0;
+      for (const row of value) {
+        const id = (row as { id?: unknown } | null)?.id;
+        if (row !== null && typeof row === 'object' && typeof id === 'string' && id.length > 0) {
+          valid.push(row as T);
+        } else {
+          skipped += 1;
+        }
       }
-      if (Array.isArray(data.timetable)) {
-        data.timetable.forEach((c) => repo.upsertUniversityClass(c));
-        imported += data.timetable.length;
-      }
-      if (Array.isArray(data.tasks)) {
-        data.tasks.forEach((t) => repo.upsertTask(t));
-        imported += data.tasks.length;
-      }
-      if (Array.isArray(data.sessions)) {
-        data.sessions.forEach((s) => repo.insertSession(s));
-        imported += data.sessions.length;
-      }
-      if (Array.isArray(data.exams)) {
-        data.exams.forEach((e) => repo.upsertExam(e));
-        imported += data.exams.length;
-      }
-      if (Array.isArray(data.mistakes)) {
-        data.mistakes.forEach((m) => repo.upsertMistake(m));
-        imported += data.mistakes.length;
-      }
-      if (Array.isArray(data.goals)) {
-        data.goals.forEach((g) => repo.upsertGoal(g));
-        imported += data.goals.length;
-      }
-      if (Array.isArray(data.habits)) {
-        data.habits.forEach((h) => repo.upsertHabit(h));
-        imported += data.habits.length;
-      }
-      if (data.preferences) repo.savePreferences(data.preferences);
-    });
+      if (skipped > 0) errors.push(`${skipped} invalid record(s) in "${group}" were skipped.`);
+      counted += valid.length;
+      return valid;
+    };
+
+    try {
+      repo.transaction(() => {
+        rows<Subject>(data.subjects, 'subjects').forEach((s) => repo.upsertSubject(s));
+        rows<Chapter>(data.chapters, 'chapters').forEach((c) => repo.upsertChapter(c));
+        rows<UniversityClass>(data.timetable, 'timetable').forEach((c) => repo.upsertUniversityClass(c));
+        rows<StudyTask>(data.tasks, 'tasks').forEach((t) => repo.upsertTask(t));
+        // Sessions use an upsert so restoring a backup over existing history is repeatable.
+        rows<StudySession>(data.sessions, 'sessions').forEach((s) => repo.upsertSession(s));
+        rows<Exam>(data.exams, 'exams').forEach((e) => repo.upsertExam(e));
+        rows<Mistake>(data.mistakes, 'mistakes').forEach((m) => repo.upsertMistake(m));
+        rows<Goal>(data.goals, 'goals').forEach((g) => repo.upsertGoal(g));
+        rows<Habit>(data.habits, 'habits').forEach((h) => repo.upsertHabit(h));
+        if (data.preferences) repo.savePreferences(data.preferences);
+      });
+      imported = counted;
+    } catch (error) {
+      // The transaction rolled back, so nothing was written: say so instead of leaving the user
+      // staring at a button that appears to do nothing.
+      return {
+        imported: 0,
+        errors: [...errors, `Import failed: ${(error as Error).message}. Nothing was changed.`],
+      };
+    }
     this.bump();
     return { imported, errors };
   }
@@ -1285,6 +1312,7 @@ export class StudyStore {
     this.repository.wipe();
     applySeed(this.repository);
     this.setState({ snapshot: this.repository ? loadSnapshot(this.repository) : EMPTY_SNAPSHOT, revision: this.state.revision + 1 });
+    this.persistNow();
   }
 
   // ---- helpers -----------------------------------------------------------

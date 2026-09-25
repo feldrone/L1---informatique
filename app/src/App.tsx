@@ -107,7 +107,7 @@ export function App() {
             className="flex items-center gap-2.5 text-left"
             aria-label="Go to dashboard"
           >
-            <span className="grid h-8 w-8 place-items-center rounded-lg bg-accent text-sm font-semibold text-white">
+            <span className="grid h-8 w-8 place-items-center rounded-lg bg-accent text-sm font-semibold text-on-accent">
               S1
             </span>
             <span className="hidden sm:block">

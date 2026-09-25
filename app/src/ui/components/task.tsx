@@ -38,6 +38,7 @@ export function TaskCard({
   chapterTitle,
   compact,
   onOpenFocus,
+  onRequestComplete,
 }: {
   task: StudyTask;
   subjectName?: string;
@@ -45,6 +46,8 @@ export function TaskCard({
   chapterTitle?: string;
   compact?: boolean;
   onOpenFocus?: (taskId: string) => void;
+  /** Opens the quick-complete dialog (minutes, difficulty, note). Falls back to instant completion. */
+  onRequestComplete?: (task: StudyTask) => void;
 }) {
   const store = useStore();
   const [expanded, setExpanded] = useState(false);
@@ -116,7 +119,9 @@ export function TaskCard({
             <Button
               size="sm"
               variant="success"
-              onClick={() => store.completeTask(task.id, { actualMin: task.plannedMin })}
+              onClick={() =>
+                onRequestComplete ? onRequestComplete(task) : store.completeTask(task.id, { actualMin: task.plannedMin })
+              }
             >
               Complete
             </Button>
@@ -222,6 +227,7 @@ export function TaskList({
   subjectLookup,
   chapterLookup,
   onOpenFocus,
+  onRequestComplete,
   emptyTitle = 'No study task planned',
   emptyDescription = 'Generate today’s plan or add a task manually.',
   emptyAction,
@@ -231,6 +237,7 @@ export function TaskList({
   subjectLookup: Map<string, { name: string; shortName: string; color: string }>;
   chapterLookup: Map<string, string>;
   onOpenFocus?: (taskId: string) => void;
+  onRequestComplete?: (task: StudyTask) => void;
   emptyTitle?: string;
   emptyDescription?: string;
   emptyAction?: React.ReactNode;
@@ -255,6 +262,7 @@ export function TaskList({
           subjectColor={task.subjectId ? subjectLookup.get(task.subjectId)?.color : undefined}
           chapterTitle={task.chapterId ? chapterLookup.get(task.chapterId) : undefined}
           onOpenFocus={onOpenFocus}
+          onRequestComplete={onRequestComplete}
           compact={compact}
         />
       ))}

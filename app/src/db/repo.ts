@@ -756,6 +756,14 @@ export class Repository {
     this.client.insert('study_sessions', sessionRow(session));
   }
 
+  /**
+   * Idempotent session write, used when restoring a backup: re-importing a file that contains
+   * sessions already in the database must overwrite them instead of failing on the primary key.
+   */
+  upsertSession(session: StudySession): void {
+    this.client.upsert('study_sessions', sessionRow(session));
+  }
+
   // -- check-ins & reviews -------------------------------------------------
   listCheckIns(): CheckIn[] {
     return this.client.all<Row>(`SELECT * FROM check_ins ORDER BY date`).map(toCheckIn);

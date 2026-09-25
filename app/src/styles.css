@@ -10,9 +10,13 @@
   --color-border: #d8dce8;
   --color-text: #101728;
   --color-text-muted: #5b6478;
-  --color-accent: #3d68d8;
+  /* Slightly deeper than the original #3d68d8 so accent text on accent-soft reaches 5.5:1. */
+  --color-accent: #3357bd;
   --color-accent-soft: #e5ecfd;
-  --color-success: #0f9d63;
+  /* Ink for text sitting on a filled accent surface (white on #3d68d8 = 5.0:1). */
+  --color-on-accent: #ffffff;
+  /* Deeper green: success text on white was 3.5:1, now 5.4:1. */
+  --color-success: #0b7a4b;
   --color-warning: #b26b00;
   --color-danger: #c0392f;
   --color-neutral: #94a3b8;
@@ -31,6 +35,9 @@
   --color-text-muted: #93a1bd;
   --color-accent: #6c93f5;
   --color-accent-soft: #17233f;
+  /* The dark accent is a light blue: white text on it only reaches 2.9:1, so filled
+     surfaces use dark ink instead (6.3:1) while the accent itself stays the brand colour. */
+  --color-on-accent: #08122a;
   --color-success: #34d399;
   --color-warning: #fbbf24;
   --color-danger: #f87171;
@@ -50,7 +57,13 @@ body {
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
-  overflow-x: hidden;
+}
+
+/* Images and SVG never push a layout wider than its column. */
+img,
+svg,
+canvas {
+  max-width: 100%;
 }
 
 *:focus-visible {

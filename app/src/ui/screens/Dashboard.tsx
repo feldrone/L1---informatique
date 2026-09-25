@@ -29,24 +29,30 @@ export function DashboardScreen({ onOpenDay }: { onOpenDay: (date: string) => vo
   const nextBestSubject = nextBest?.subjectId ? subjectLookup.get(nextBest.subjectId) : null;
   const topPriority = priorities[0] ?? null;
   const hasHistory = analytics.dataPoints > 0;
+  const dayHasTasks = analytics.todayTasks.length > 0;
 
   const heroInset = (
     <>
       <span className="tnum block">
         {todayProgress.tasksDone}/{todayProgress.tasksTotal} tasks · {formatMinutes(todayProgress.completedMin)} logged
       </span>
-      <span className="tnum block">{formatMinutes(todayProgress.plannedMin)} planned</span>
+      <span className="tnum block">
+        {formatMinutes(todayProgress.completedMin)} of {formatMinutes(todayProgress.plannedMin)} planned
+      </span>
     </>
   );
 
   return (
     <div className="space-y-6">
-      <section className="grid gap-4 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)]">
-        <Card className="flex flex-col items-center gap-5 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex flex-col items-center">
+      {/* items-start keeps each card at its natural height instead of stretching a short hero
+          card into a tall empty column when the task list next to it is long. */}
+      <section className="grid items-start gap-4 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)]">
+        <Card className="flex min-w-0 flex-col items-center gap-5 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex min-w-0 flex-col items-center">
             <ProgressRing
               percent={todayProgress.percent}
               label="Today"
+              percentNote="of planned time"
               primary={heroInset}
               secondary={
                 todayProgress.remainingMin > 0
@@ -132,7 +138,13 @@ export function DashboardScreen({ onOpenDay }: { onOpenDay: (date: string) => vo
 
         <Card
           title="Today's tasks"
-          subtitle={openTasks.length > 0 ? `${openTasks.length} task(s) ready to run` : 'All planned work handled'}
+          subtitle={
+            openTasks.length > 0
+              ? `${openTasks.length} task(s) ready to run`
+              : dayHasTasks
+                ? 'All planned work handled'
+                : 'Nothing planned yet'
+          }
           action={
             <Button size="sm" variant="ghost" onClick={() => navigate('today')}>
               Open Today
@@ -145,12 +157,24 @@ export function DashboardScreen({ onOpenDay }: { onOpenDay: (date: string) => vo
             chapterLookup={chapterLookup}
             compact
             onOpenFocus={() => navigate('focus')}
-            emptyTitle="No study task planned"
-            emptyDescription="Generate today’s plan — it reserves buffer time and never fills 100% of your availability."
+            /* The empty state depends on why nothing is open: a finished plan must not be
+               mistaken for a missing one (the button would rebuild work already done). */
+            emptyTitle={dayHasTasks ? 'Plan complete' : 'No study task planned'}
+            emptyDescription={
+              dayHasTasks
+                ? 'Everything planned for today is handled. Revision of weak chapters is the next useful action.'
+                : 'Generate today’s plan — it reserves buffer time and never fills 100% of your availability.'
+            }
             emptyAction={
-              <Button size="sm" variant="primary" onClick={() => store.generatePlan(today)}>
-                Generate today&apos;s plan
-              </Button>
+              dayHasTasks ? (
+                <Button size="sm" variant="secondary" onClick={() => navigate('today')}>
+                  Open Today
+                </Button>
+              ) : (
+                <Button size="sm" variant="primary" onClick={() => store.generatePlan(today)}>
+                  Generate today&apos;s plan
+                </Button>
+              )
             }
           />
         </Card>

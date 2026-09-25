@@ -41,6 +41,9 @@ export function FocusTimer({
   const subject = task?.subjectId ? subjects.find((s) => s.id === task.subjectId) ?? null : null;
 
   useEffect(() => {
+    // A finished block keeps its 00:00 so the panel never shows a full countdown next to
+    // "Session finished"; every other phase shows a whole block again.
+    if (phase === 'done') return;
     setRemaining((phase === 'break' ? breakMin : focusMin) * 60);
   }, [focusMin, breakMin, phase]);
 
@@ -50,23 +53,20 @@ export function FocusTimer({
       return;
     }
     intervalRef.current = setInterval(() => {
-      setRemaining((prev) => {
-        if (prev <= 1) {
-          if (phase === 'focus') {
-            setPhase('done');
-          } else {
-            setPhase('idle');
-          }
-          return 0;
-        }
-        return prev - 1;
-      });
+      // Updaters stay pure (StrictMode calls them twice): the phase change is derived below.
+      setRemaining((prev) => (prev <= 1 ? 0 : prev - 1));
       if (phase === 'focus') setElapsedFocus((prev) => prev + 1);
     }, 1000);
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
   }, [phase]);
+
+  useEffect(() => {
+    if (phase !== 'focus' && phase !== 'break') return;
+    if (remaining > 0) return;
+    setPhase(phase === 'focus' ? 'done' : 'idle');
+  }, [remaining, phase]);
 
   const total = (phase === 'break' ? breakMin : focusMin) * 60;
   const progress = total === 0 ? 0 : ((total - remaining) / total) * 100;

@@ -49,6 +49,7 @@ export function ProgressRing({
   size = 208,
   stroke = 14,
   label,
+  percentNote,
   primary,
   secondary,
   tone = 'accent',
@@ -58,6 +59,8 @@ export function ProgressRing({
   size?: number;
   stroke?: number;
   label?: string;
+  /** What the percentage is a percentage *of* — two rings measure different things on purpose. */
+  percentNote?: string;
   primary?: ReactNode;
   secondary?: ReactNode;
   tone?: 'accent' | 'success' | 'warning';
@@ -71,36 +74,42 @@ export function ProgressRing({
   const toneColor = tone === 'success' ? 'var(--color-success)' : tone === 'warning' ? 'var(--color-warning)' : 'var(--color-accent)';
 
   return (
-    <div className="relative inline-flex items-center justify-center" role="img" aria-label={ariaSummary}>
-      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="-rotate-90">
-        <circle
-          cx={size / 2}
-          cy={size / 2}
-          r={radius}
-          fill="none"
-          stroke="var(--color-border)"
-          strokeWidth={stroke}
-        />
-        <circle
-          cx={size / 2}
-          cy={size / 2}
-          r={radius}
-          fill="none"
-          stroke={toneColor}
-          strokeWidth={stroke}
-          strokeLinecap="round"
-          strokeDasharray={circumference}
-          strokeDashoffset={offset}
-          className="ring-progress"
-          style={{ filter: 'drop-shadow(0 0 6px color-mix(in srgb, var(--color-accent) 35%, transparent))' }}
-        />
-      </svg>
-      <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-        {label && <p className="text-[11px] font-semibold tracking-[0.18em] text-text-muted uppercase">{label}</p>}
-        <p className="tnum text-4xl font-semibold">{Math.round(animated)}%</p>
-        {primary && <div className="mt-1 text-xs text-text-muted">{primary}</div>}
-        {secondary && <div className="mt-1 text-[11px] text-text-muted">{secondary}</div>}
+    <div className="flex flex-col items-center">
+      <div className="relative inline-flex items-center justify-center" role="img" aria-label={ariaSummary}>
+        <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="-rotate-90">
+          <circle
+            cx={size / 2}
+            cy={size / 2}
+            r={radius}
+            fill="none"
+            stroke="var(--color-border)"
+            strokeWidth={stroke}
+          />
+          <circle
+            cx={size / 2}
+            cy={size / 2}
+            r={radius}
+            fill="none"
+            stroke={toneColor}
+            strokeWidth={stroke}
+            strokeLinecap="round"
+            strokeDasharray={circumference}
+            strokeDashoffset={offset}
+            className="ring-progress"
+            style={{ filter: 'drop-shadow(0 0 6px color-mix(in srgb, var(--color-accent) 35%, transparent))' }}
+          />
+        </svg>
+        {/* The inset is padded so every line stays inside the circle instead of crossing the stroke. */}
+        <div className="absolute inset-0 flex flex-col items-center justify-center px-[15%] text-center">
+          {label && (
+            <p className="max-w-full text-[10px] leading-none font-semibold tracking-[0.12em] text-text-muted uppercase">{label}</p>
+          )}
+          <p className="tnum text-[27px] leading-none font-semibold">{Math.round(animated)}%</p>
+          {percentNote && <p className="text-[10px] leading-tight text-text-muted">{percentNote}</p>}
+          {primary && <div className="mt-0.5 max-w-full text-[11px] leading-tight text-text-muted">{primary}</div>}
+        </div>
       </div>
+      {secondary && <p className="mt-2 max-w-[16rem] text-center text-[11px] text-text-muted">{secondary}</p>}
     </div>
   );
 }
@@ -290,7 +299,7 @@ export function WeeklyBars({
         {targetWeeklyMin ? <span>Weekly target {formatMinutes(targetWeeklyMin)}</span> : null}
       </div>
       <div
-        className="scroll-thin flex items-end gap-2 overflow-x-auto pb-1"
+        className="scroll-thin flex w-full min-w-0 items-end gap-2 overflow-x-auto pb-1"
         role="img"
         aria-label={`Weekly planned versus actual study time: ${days
           .map((d) => `${d.label} ${d.actualMin} of ${d.plannedMin} minutes`)
@@ -388,7 +397,7 @@ export function StudyHeatmap({
               aria-selected={m.id === metric}
               onClick={() => onMetricChange(m.id)}
               className={cx(
-                'rounded-lg border px-2 py-1 text-[11px] font-medium transition',
+                'min-h-8 rounded-lg border px-2.5 py-1.5 text-[11px] font-medium transition',
                 m.id === metric ? 'border-accent bg-accent-soft text-accent' : 'border-border text-text-muted hover:text-text',
               )}
             >
@@ -404,7 +413,7 @@ export function StudyHeatmap({
               aria-selected={r.id === range}
               onClick={() => setRange(r.id)}
               className={cx(
-                'rounded-lg border px-2 py-1 text-[11px] transition',
+                'min-h-8 rounded-lg border px-2.5 py-1.5 text-[11px] transition',
                 r.id === range ? 'border-accent text-accent' : 'border-border text-text-muted hover:text-text',
               )}
             >
@@ -415,14 +424,14 @@ export function StudyHeatmap({
       </div>
 
       <div className="scroll-thin overflow-x-auto pb-1">
-        <div className="flex gap-[3px]" role="img" aria-label={`Study heatmap, ${activeRange.label}, ${metricInfo?.label}: ${active} active days, total ${total} ${metricInfo?.unit}`}>
+        <div className="flex gap-1 sm:gap-[3px]" role="img" aria-label={`Study heatmap, ${activeRange.label}, ${metricInfo?.label}: ${active} active days, total ${total} ${metricInfo?.unit}`}>
           {weeks.map((week, weekIndex) => (
-            <div key={weekIndex} className="flex flex-col gap-[3px]">
+            <div key={weekIndex} className="flex flex-col gap-1 sm:gap-[3px]">
               {week.map((cell) => (
                 <button
                   key={cell.date}
                   type="button"
-                  className="heat-cell h-3.5 w-3.5 rounded-[3px] border border-black/5 dark:border-white/5"
+                  className="heat-cell h-5 w-5 rounded-[3px] border border-black/5 sm:h-3.5 sm:w-3.5 dark:border-white/5"
                   style={{
                     background:
                       cell.level === 0
@@ -499,11 +508,11 @@ export function HabitMatrix({
           ))}
         </div>
         <div className="flex items-center gap-1">
-          <button type="button" onClick={onPrevMonth} className="rounded-lg border border-border px-2 py-0.5 text-xs text-text-muted hover:text-text" aria-label="Previous month">
+          <button type="button" onClick={onPrevMonth} className="inline-flex min-h-8 items-center rounded-lg border border-border px-2.5 py-1.5 text-xs text-text-muted hover:text-text" aria-label="Previous month">
             ‹
           </button>
           <span className="tnum text-xs text-text-muted">{monthLabel}</span>
-          <button type="button" onClick={onNextMonth} className="rounded-lg border border-border px-2 py-0.5 text-xs text-text-muted hover:text-text" aria-label="Next month">
+          <button type="button" onClick={onNextMonth} className="inline-flex min-h-8 items-center rounded-lg border border-border px-2.5 py-1.5 text-xs text-text-muted hover:text-text" aria-label="Next month">
             ›
           </button>
         </div>
