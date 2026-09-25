@@ -130,36 +130,6 @@ export function DashboardScreen({ onOpenDay }: { onOpenDay: (date: string) => vo
           </div>
         </Card>
 
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-2">
-          <StatTile
-            label="Current streak"
-            value={`${streaks.currentStreak} d`}
-            hint={
-              streaks.missedYesterday
-                ? 'Yesterday was missed — today still counts, the streak is not reset'
-                : streaks.todayPending
-                  ? 'Today is still open'
-                  : streaks.lastActiveDate
-                    ? `Last active ${streaks.lastActiveDate}`
-                    : 'No activity yet'
-            }
-            tone={streaks.currentStreak > 0 ? 'success' : undefined}
-          />
-          <StatTile label="Longest streak" value={`${streaks.longestStreak} d`} hint={`${streaks.totalActiveDays} active day(s) recorded`} />
-          <StatTile
-            label="Active days (30 d)"
-            value={`${streaks.activeDaysWindow}/${streaks.windowDays}`}
-            hint="A day counts from 20 effective minutes"
-          />
-          <StatTile
-            label="Consistency"
-            value={consistency.insufficientData ? '—' : `${consistency.score}/100`}
-            hint={consistency.insufficientData ? 'Not enough data yet.' : 'Prep regularity — not intelligence or rank'}
-          />
-        </div>
-      </section>
-
-      <section className="grid gap-4 lg:grid-cols-2">
         <Card
           title="Today's tasks"
           subtitle={openTasks.length > 0 ? `${openTasks.length} task(s) ready to run` : 'All planned work handled'}
@@ -184,7 +154,37 @@ export function DashboardScreen({ onOpenDay }: { onOpenDay: (date: string) => vo
             }
           />
         </Card>
+      </section>
 
+      <section className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <StatTile
+            label="Current streak"
+            value={`${streaks.currentStreak} d`}
+            hint={
+              streaks.missedYesterday
+                ? 'Yesterday was missed — today still counts, the streak is not reset'
+                : streaks.todayPending
+                  ? 'Today is still open'
+                  : streaks.lastActiveDate
+                    ? `Last active ${streaks.lastActiveDate}`
+                    : 'No activity yet'
+            }
+            tone={streaks.currentStreak > 0 ? 'success' : undefined}
+          />
+          <StatTile label="Longest streak" value={`${streaks.longestStreak} d`} hint={`${streaks.totalActiveDays} active day(s) recorded`} />
+          <StatTile
+            label="Active days (30 d)"
+            value={`${streaks.activeDaysWindow}/${streaks.windowDays}`}
+            hint="A day counts from 20 effective minutes"
+          />
+        <StatTile
+          label="Consistency"
+          value={consistency.insufficientData ? '—' : `${consistency.score}/100`}
+          hint={consistency.insufficientData ? 'Not enough data yet.' : 'Prep regularity — not intelligence or rank'}
+        />
+      </section>
+
+      <section className="grid gap-4 lg:grid-cols-2">
         <Card
           title="Subject balance"
           subtitle="Planned vs effective time over the last 14 days"
