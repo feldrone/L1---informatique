@@ -7,6 +7,7 @@
 import { useMemo } from 'react';
 import { Badge, Button, Card, ProvenanceBadge, StatTile, cx } from '../components/primitives';
 import { BalanceBars } from '../components/charts';
+import { SubjectHealthCard } from '../components/intelligence';
 import { formatMinutes } from '../../domain/date';
 import { navigate } from '../router';
 import { useAnalytics, useStore, useStudy } from '../../state/provider';
@@ -23,6 +24,7 @@ export function SubjectsScreen() {
     [analytics.priorities],
   );
   const balanceById = useMemo(() => new Map(analytics.balance.map((b) => [b.subjectId, b])), [analytics.balance]);
+  const healthById = useMemo(() => new Map(analytics.subjectHealth.map((h) => [h.subjectId, h])), [analytics.subjectHealth]);
 
   const active = subjects.filter((s) => s.active).sort((a, b) => a.sortOrder - b.sortOrder);
   const pendingExams = analytics.upcomingExams;
@@ -50,6 +52,14 @@ export function SubjectsScreen() {
 
       <Card title="Subject balance" subtitle="Planned vs effective time, last 14 days — neglect warnings are factual only">
         <BalanceBars entries={analytics.balance} onSelect={(id) => navigate(`subject/${id}`)} />
+      </Card>
+
+      <Card title="Subject health — Progress Intelligence" subtitle="Transparent health scores with factors and recommendations">
+        <div className="grid gap-3 md:grid-cols-2">
+          {analytics.subjectHealth.map((h) => (
+            <SubjectHealthCard key={h.subjectId} health={h} onSelect={(id) => navigate(`subject/${id}`)} />
+          ))}
+        </div>
       </Card>
 
       <div className="grid gap-3 md:grid-cols-2">
@@ -81,7 +91,7 @@ export function SubjectsScreen() {
                 <ProvenanceBadge provenance={subject.provenance} />
               </div>
 
-              <dl className="grid grid-cols-3 gap-2 text-xs">
+              <dl className="grid grid-cols-4 gap-2 text-xs">
                 <div>
                   <dt className="text-text-muted">Mastery</dt>
                   <dd className="tnum">
@@ -89,6 +99,13 @@ export function SubjectsScreen() {
                     <span className="block text-[11px] text-text-muted">
                       {averageMastery === null ? 'no chapter' : MASTERY_TEXT[Math.round(averageMastery)]}
                     </span>
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-text-muted">Health</dt>
+                  <dd className="tnum">
+                    {healthById.get(subject.id)?.score ?? '—'}/100
+                    <span className="block text-[11px] text-text-muted">{healthById.get(subject.id)?.label ?? ''}</span>
                   </dd>
                 </div>
                 <div>

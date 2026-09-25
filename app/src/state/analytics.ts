@@ -40,7 +40,12 @@ import { computeGoalProgress, evaluateAchievements, type GoalProgress } from '..
 import { computeSubjectPriorities, type SubjectPriority } from '../domain/planning/priority';
 import { dueRevisions } from '../domain/planning/revision';
 import { generateRecoveryPlan } from '../domain/planning/recovery';
-import { countMissedDays } from '../domain/planning/behaviour';
+import { countMissedDays, deriveBehaviourSignals } from '../domain/planning/behaviour';
+import { buildAllChapterProfiles, type ChapterProfile } from '../domain/analytics/chapterProfile';
+import { computeAllSubjectHealth, type SubjectHealth } from '../domain/analytics/subjectHealth';
+import { generateWeeklyReview, generateLastNWeeklyReviews, type WeeklyReview } from '../domain/analytics/weeklyReview';
+import { computePerformance, type PerformanceSummary } from '../domain/analytics/performance';
+import { generateAdaptationPlan, type AdaptationPlan } from '../domain/planning/adaptation';
 import type { AchievementDefinition } from '../domain/analytics/goals';
 
 export type PeriodKey = '7d' | '30d' | '90d' | 'semester' | 'year';
@@ -162,6 +167,14 @@ export interface AnalyticsBundle {
   revisionDue: Chapter[];
   masteryByChapter: Array<{ chapter: Chapter; level: MasteryLevel; confidence: number; suggested: number | null }>;
   dataPoints: number;
+  // Phase 3 — Progress Intelligence
+  chapterProfiles: ChapterProfile[];
+  subjectHealth: SubjectHealth[];
+  weeklyReview: WeeklyReview;
+  weeklyReviews: WeeklyReview[];
+  performance: PerformanceSummary;
+  performanceByPeriod: Record<PeriodKey, PerformanceSummary>;
+  adaptationPlan: AdaptationPlan;
 }
 
 export function computeAnalytics(snapshot: Snapshot, today: ISODate, periodKey: PeriodKey = '30d'): AnalyticsBundle {
@@ -327,6 +340,174 @@ export function computeAnalytics(snapshot: Snapshot, today: ISODate, periodKey: 
     })),
   };
 
+  // ---- Phase 3 — Progress Intelligence ----
+  const chapterProfiles = buildAllChapterProfiles({
+    chapters: snapshot.chapters,
+    subjects: snapshot.subjects,
+    tasks: snapshot.tasks,
+    sessions: snapshot.sessions,
+    mistakes: snapshot.mistakes,
+    quizzes: snapshot.quizzes,
+    reviewEvents: snapshot.reviewEvents,
+    today,
+  });
+
+  const subjectHealth = computeAllSubjectHealth({
+    subjects: snapshot.subjects,
+    chapters: snapshot.chapters,
+    tasks: snapshot.tasks,
+    sessions: snapshot.sessions,
+    mistakes: snapshot.mistakes,
+    quizzes: snapshot.quizzes,
+    backlog: snapshot.backlog,
+    exams: snapshot.exams,
+    today,
+    windowDays: 14,
+  });
+
+  const weeklyReview = generateWeeklyReview({
+    weekStart: weekFrom,
+    today,
+    tasks: snapshot.tasks,
+    sessions: snapshot.sessions,
+    subjects: snapshot.subjects,
+    chapters: snapshot.chapters,
+    mistakes: snapshot.mistakes,
+    reviews: snapshot.reviews,
+    backlog: snapshot.backlog,
+    checkIns: snapshot.checkIns,
+  });
+
+  const weeklyReviews = generateLastNWeeklyReviews({
+    today,
+    tasks: snapshot.tasks,
+    sessions: snapshot.sessions,
+    subjects: snapshot.subjects,
+    chapters: snapshot.chapters,
+    mistakes: snapshot.mistakes,
+    reviews: snapshot.reviews,
+    backlog: snapshot.backlog,
+    checkIns: snapshot.checkIns,
+    n: 8,
+  });
+
+  const performance = (() => {
+    const window = periodWindow(periodKey, today);
+    return computePerformance({
+      from: window.from,
+      to: window.to,
+      label: window.label,
+      days: timeline,
+      tasks: snapshot.tasks,
+      sessions: snapshot.sessions,
+      subjects: snapshot.subjects,
+      chapters: snapshot.chapters,
+      mistakes: snapshot.mistakes,
+      quizzes: snapshot.quizzes,
+      previous: window.previous ?? undefined,
+    });
+  })();
+
+  const performanceByPeriod: Record<PeriodKey, PerformanceSummary> = {
+    '7d': (() => {
+      const w = periodWindow('7d', today);
+      return computePerformance({
+        from: w.from,
+        to: w.to,
+        label: w.label,
+        days: timeline,
+        tasks: snapshot.tasks,
+        sessions: snapshot.sessions,
+        subjects: snapshot.subjects,
+        chapters: snapshot.chapters,
+        mistakes: snapshot.mistakes,
+        quizzes: snapshot.quizzes,
+        previous: w.previous ?? undefined,
+      });
+    })(),
+    '30d': (() => {
+      const w = periodWindow('30d', today);
+      return computePerformance({
+        from: w.from,
+        to: w.to,
+        label: w.label,
+        days: timeline,
+        tasks: snapshot.tasks,
+        sessions: snapshot.sessions,
+        subjects: snapshot.subjects,
+        chapters: snapshot.chapters,
+        mistakes: snapshot.mistakes,
+        quizzes: snapshot.quizzes,
+        previous: w.previous ?? undefined,
+      });
+    })(),
+    '90d': (() => {
+      const w = periodWindow('90d', today);
+      return computePerformance({
+        from: w.from,
+        to: w.to,
+        label: w.label,
+        days: timeline,
+        tasks: snapshot.tasks,
+        sessions: snapshot.sessions,
+        subjects: snapshot.subjects,
+        chapters: snapshot.chapters,
+        mistakes: snapshot.mistakes,
+        quizzes: snapshot.quizzes,
+        previous: w.previous ?? undefined,
+      });
+    })(),
+    semester: (() => {
+      const w = periodWindow('semester', today);
+      return computePerformance({
+        from: w.from,
+        to: w.to,
+        label: w.label,
+        days: timeline,
+        tasks: snapshot.tasks,
+        sessions: snapshot.sessions,
+        subjects: snapshot.subjects,
+        chapters: snapshot.chapters,
+        mistakes: snapshot.mistakes,
+        quizzes: snapshot.quizzes,
+        previous: w.previous ?? undefined,
+      });
+    })(),
+    year: (() => {
+      const w = periodWindow('year', today);
+      return computePerformance({
+        from: w.from,
+        to: w.to,
+        label: w.label,
+        days: timeline,
+        tasks: snapshot.tasks,
+        sessions: snapshot.sessions,
+        subjects: snapshot.subjects,
+        chapters: snapshot.chapters,
+        mistakes: snapshot.mistakes,
+        quizzes: snapshot.quizzes,
+        previous: w.previous ?? undefined,
+      });
+    })(),
+  };
+
+  const behaviour = deriveBehaviourSignals({
+    date: today,
+    tasks: snapshot.tasks,
+    sessions: snapshot.sessions,
+  });
+
+  const adaptationPlan = generateAdaptationPlan({
+    date: today,
+    rules,
+    behaviour,
+    subjectHealth,
+    chapterProfiles,
+    weeklyReviews,
+    performance,
+    today,
+  });
+
   return {
     today,
     timeline,
@@ -363,6 +544,13 @@ export function computeAnalytics(snapshot: Snapshot, today: ISODate, periodKey: 
       suggested: chapter.masteryManual === null ? null : chapter.mastery,
     })),
     dataPoints: snapshot.tasks.length + snapshot.sessions.length,
+    chapterProfiles,
+    subjectHealth,
+    weeklyReview,
+    weeklyReviews,
+    performance,
+    performanceByPeriod,
+    adaptationPlan,
   };
 }
 

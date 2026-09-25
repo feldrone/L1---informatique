@@ -6,14 +6,16 @@
 import { useMemo } from 'react';
 import { Button, Card, EmptyState, ProvenanceBadge, StatTile, cx } from '../components/primitives';
 import { Sparkline } from '../components/charts';
+import { SubjectHealthCard, ChapterProfileCard } from '../components/intelligence';
 import { formatMinutes, addDays } from '../../domain/date';
 import { href, navigate } from '../router';
-import { useStore, useStudy } from '../../state/provider';
+import { useAnalytics, useStore, useStudy } from '../../state/provider';
 import { MASTERY_TEXT } from '../lookups';
 
 export function SubjectDetailScreen({ subjectId }: { subjectId: string }) {
   const { state, today } = useStudy();
   const store = useStore();
+  const analytics = useAnalytics();
 
   const subject = state.snapshot.subjects.find((s) => s.id === subjectId) ?? null;
   const chapters = useMemo(
@@ -84,6 +86,40 @@ export function SubjectDetailScreen({ subjectId }: { subjectId: string }) {
         <StatTile label="Backlog" value={formatMinutes(backlogMin)} tone={backlogMin > 0 ? 'warning' : undefined} />
         <StatTile label="Open mistakes" value={mistakes.length} hint={mistakes.length > 0 ? 'recurrence raises priority' : 'none recorded'} />
       </div>
+
+      {(() => {
+        const health = analytics.subjectHealth.find((h) => h.subjectId === subjectId);
+        const perf = analytics.performance.bySubject.find((p) => p.subjectId === subjectId);
+        const profiles = analytics.chapterProfiles.filter((p) => p.subjectId === subjectId);
+        return (
+          <>
+            {health && (
+              <Card title="Subject health — Progress Intelligence" subtitle={`Score ${health.score}/100 · ${health.label} · ${health.evidence.sentence}`}>
+                <SubjectHealthCard health={health} />
+              </Card>
+            )}
+            {perf && (
+              <Card title="Performance" subtitle={`${perf.name} · ${perf.tasks.completionRate}% completion`}>
+                <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                  <StatTile label="Planned" value={formatMinutes(perf.time.plannedMin)} />
+                  <StatTile label="Effective" value={formatMinutes(perf.time.effectiveMin)} hint={`${perf.time.share}% of total`} />
+                  <StatTile label="Mastery avg" value={perf.mastery.avg ? `${perf.mastery.avg}/5` : '—'} hint={`${perf.mastery.examReady} exam-ready`} />
+                  <StatTile label="Mistakes" value={perf.mistakes.open} hint={`${perf.mistakes.total} total`} />
+                </div>
+              </Card>
+            )}
+            {profiles.length > 0 && (
+              <Card title="Chapter profiles" subtitle={`${profiles.length} chapter(s) · sorted by health`}>
+                <div className="space-y-2.5">
+                  {profiles.slice(0, 6).map((p) => (
+                    <ChapterProfileCard key={p.chapterId} profile={p} onOpen={(id) => navigate(`chapter/${id}`)} />
+                  ))}
+                </div>
+              </Card>
+            )}
+          </>
+        );
+      })()}
 
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
         <Card title="Chapter mastery" subtitle="Chapters come from the seeded programme — edit them in Settings">

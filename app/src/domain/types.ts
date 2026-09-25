@@ -350,6 +350,29 @@ export interface InsightRecord {
   createdAt: string;
 }
 
+export interface WeeklyReviewRecord {
+  id: string;
+  weekStart: string;
+  weekEnd: string;
+  generatedAt: string;
+  summaryJson: string;
+  notes: string;
+  createdAt: string;
+}
+
+export interface AdaptationLog {
+  id: string;
+  date: string;
+  kind: string;
+  text: string;
+  reason: string;
+  evidenceJson: string;
+  priority: number;
+  applied: boolean;
+  appliedAt: string | null;
+  createdAt: string;
+}
+
 // ---------------------------------------------------------------------------
 // User preferences & personal rules (section 26)
 // ---------------------------------------------------------------------------
