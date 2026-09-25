@@ -1,0 +1,169 @@
+@import 'tailwindcss';
+
+/* Manual dark/light switch (the app stores the preference in the user profile). */
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --color-surface: #f5f6fa;
+  --color-surface-raised: #ffffff;
+  --color-surface-sunken: #eceef5;
+  --color-border: #d8dce8;
+  --color-text: #101728;
+  --color-text-muted: #5b6478;
+  --color-accent: #3d68d8;
+  --color-accent-soft: #e5ecfd;
+  --color-success: #0f9d63;
+  --color-warning: #b26b00;
+  --color-danger: #c0392f;
+  --color-neutral: #94a3b8;
+
+  --font-sans: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
+    'Noto Sans', sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
+}
+
+.dark {
+  --color-surface: #0a1020;
+  --color-surface-raised: #111a2e;
+  --color-surface-sunken: #070c18;
+  --color-border: #223052;
+  --color-text: #e8edf8;
+  --color-text-muted: #93a1bd;
+  --color-accent: #6c93f5;
+  --color-accent-soft: #17233f;
+  --color-success: #34d399;
+  --color-warning: #fbbf24;
+  --color-danger: #f87171;
+  --color-neutral: #64748b;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background-color: var(--color-surface);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  overflow-x: hidden;
+}
+
+*:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.tnum {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Motion primitives — subtle, GPU-friendly, disabled for reduced-motion users. */
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 6px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes grow-w {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+@keyframes draw-seg {
+  from {
+    stroke-dashoffset: var(--seg-start);
+  }
+  to {
+    stroke-dashoffset: var(--seg-end);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 320ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.animate-fade-in {
+  animation: fade-in 240ms ease-out both;
+}
+
+.animate-grow-w {
+  transform-origin: left center;
+  animation: grow-w 520ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.ring-progress {
+  transition: stroke-dashoffset 700ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.ring-segment {
+  transition:
+    opacity 180ms ease,
+    transform 180ms ease;
+}
+
+.heat-cell {
+  transition:
+    transform 140ms ease,
+    opacity 140ms ease;
+}
+
+.heat-cell:hover,
+.heat-cell:focus-visible {
+  transform: scale(1.25);
+}
+
+.matrix-cell {
+  transition: transform 160ms ease;
+}
+
+.matrix-cell:hover {
+  transform: scale(1.08);
+}
+
+.timeline-item {
+  animation: fade-in-up 260ms ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+/* thin scrollbars on the analytics panels */
+.scroll-thin::-webkit-scrollbar {
+  height: 8px;
+  width: 8px;
+}
+.scroll-thin::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 999px;
+}
