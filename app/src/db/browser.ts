@@ -52,7 +52,26 @@ export interface BrowserDatabaseHandle extends DbClient {
   readonly flushCount: () => number;
 }
 
-export async function openBrowserDatabase(): Promise<BrowserDatabaseHandle> {
+/**
+ * Single handle per page load.
+ *
+ * React StrictMode invokes mount effects twice in development; opening two handles on the same
+ * IndexedDB record would let the first (stale) handle flush its bytes over the newer data. The
+ * promise is therefore cached, so every caller shares one database connection.
+ */
+let sharedHandle: Promise<BrowserDatabaseHandle> | null = null;
+
+export function openBrowserDatabase(): Promise<BrowserDatabaseHandle> {
+  if (sharedHandle === null) sharedHandle = createBrowserDatabase();
+  return sharedHandle;
+}
+
+/** Only used by tests/tools that need a fresh handle. */
+export function resetSharedBrowserDatabase(): void {
+  sharedHandle = null;
+}
+
+async function createBrowserDatabase(): Promise<BrowserDatabaseHandle> {
   const SQL = await loadSqlJs((file) => (file.endsWith('.wasm') ? wasmUrl : file));
 
   let existing: Uint8Array | null = null;
