@@ -7,9 +7,10 @@ import { useMemo, useState } from 'react';
 import { Badge, Button, Card, EmptyState, Field, Modal, StatTile, TextArea, cx } from '../components/primitives';
 import { buildSessionTimeline } from '../../domain/analytics/progress';
 import { SessionTimeline } from '../components/charts';
+import { ChapterProfileCard } from '../components/intelligence';
 import { formatMinutes } from '../../domain/date';
 import { navigate } from '../router';
-import { useStore, useStudy } from '../../state/provider';
+import { useAnalytics, useStore, useStudy } from '../../state/provider';
 import { MASTERY_TEXT } from '../lookups';
 
 const LABELS: Array<{ level: 1 | 2 | 3 | 4 | 5; description: string }> = [
@@ -133,6 +134,9 @@ function ChapterView({
     [chapters, chapter.id, chapter.subjectId],
   );
 
+  const analytics = useAnalytics();
+  const profile = analytics.chapterProfiles.find((p) => p.chapterId === chapter.id) ?? null;
+
   const timeline = useMemo(
     () =>
       buildSessionTimeline({
@@ -184,6 +188,12 @@ function ChapterView({
         <StatTile label="Effective time" value={formatMinutes(effectiveMin)} hint={`${sessions.length} session(s)`} />
         <StatTile label="Quiz average" value={averageQuiz === null ? '—' : `${averageQuiz}%`} hint={`${quizzes.length} attempt(s)`} />
       </div>
+
+      {profile && (
+        <Card title="Progress Intelligence — Chapter profile" subtitle={`${profile.health.label} · score ${profile.health.score}/100 · ${profile.evidence.sampleSize} data point(s)`}>
+          <ChapterProfileCard profile={profile} />
+        </Card>
+      )}
 
       <div className="grid gap-4 lg:grid-cols-2">
         <Card

@@ -8,6 +8,7 @@
 
 import { useMemo, useState } from 'react';
 import { Badge, Button, Card, EmptyState, Field, Select, StatTile, TextArea, cx } from '../components/primitives';
+import { AdaptationCard, SubjectHealthCard } from '../components/intelligence';
 import { formatMinutes, addDays } from '../../domain/date';
 import { navigate } from '../router';
 import { useAnalytics, useStore, useStudy } from '../../state/provider';
@@ -209,6 +210,21 @@ export function RecoveryScreen() {
           </p>
         </Card>
       </div>
+
+      <AdaptationCard plan={analytics.adaptationPlan} />
+
+      {analytics.subjectHealth.filter((h) => h.label === 'critical' || h.label === 'at-risk').length > 0 && (
+        <Card title="Subject health — at risk" subtitle="Health scores that influence recovery priority">
+          <div className="space-y-3">
+            {analytics.subjectHealth
+              .filter((h) => h.label === 'critical' || h.label === 'at-risk')
+              .slice(0, 3)
+              .map((h) => (
+                <SubjectHealthCard key={h.subjectId} health={h} onSelect={(id) => navigate(`subject/${id}`)} />
+              ))}
+          </div>
+        </Card>
+      )}
 
       <Card title="Apply the recovery plan" subtitle="Only what you accept is written to the plan">
         <div className="flex flex-wrap items-center gap-2">

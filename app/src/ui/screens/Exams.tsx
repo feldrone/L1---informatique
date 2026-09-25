@@ -5,14 +5,16 @@
 
 import { useMemo, useState } from 'react';
 import { Badge, Button, Card, EmptyState, Field, Modal, Select, StatTile, cx } from '../components/primitives';
+import { SubjectHealthCard, ChapterProfileCard, AdaptationCard } from '../components/intelligence';
 import { formatMinutes, daysBetween, todayISO } from '../../domain/date';
-import { useStore, useStudy } from '../../state/provider';
+import { useAnalytics, useStore, useStudy } from '../../state/provider';
 import { useLookups, MASTERY_TEXT } from '../lookups';
 import type { Exam } from '../../domain/types';
 
 export function ExamsScreen() {
   const { state, today } = useStudy();
   const store = useStore();
+  const analytics = useAnalytics();
   const { subjectById, chapterById } = useLookups();
   const rules = store.planningRules();
   const [editing, setEditing] = useState<Exam | null>(null);
@@ -111,6 +113,35 @@ export function ExamsScreen() {
             </li>
           </ul>
         </Card>
+      )}
+
+      {upcoming.length > 0 && (
+        <>
+          <Card title="Subject health for upcoming exams" subtitle="Progress Intelligence — exam readiness">
+            <div className="space-y-3">
+              {upcoming.slice(0, 3).map((exam) => {
+                const health = analytics.subjectHealth.find((h) => h.subjectId === exam.subjectId);
+                if (!health) return null;
+                return <SubjectHealthCard key={exam.id} health={health} onSelect={(id) => (window.location.hash = `#/subject/${id}`)} />;
+              })}
+            </div>
+          </Card>
+
+          <Card title="Chapter profiles — exam syllabus" subtitle="Weakest chapters in upcoming exam syllabi">
+            <div className="space-y-2.5">
+              {upcoming.slice(0, 2).flatMap((exam) => {
+                const chapters = exam.syllabusChapterIds.length > 0 ? exam.syllabusChapterIds : state.snapshot.chapters.filter((c) => c.subjectId === exam.subjectId).map((c) => c.id);
+                return analytics.chapterProfiles
+                  .filter((p) => chapters.includes(p.chapterId))
+                  .sort((a, b) => a.health.score - b.health.score)
+                  .slice(0, 2)
+                  .map((p) => <ChapterProfileCard key={`${exam.id}-${p.chapterId}`} profile={p} onOpen={(id) => (window.location.hash = `#/chapter/${id}`)} />);
+              })}
+            </div>
+          </Card>
+
+          <AdaptationCard plan={analytics.adaptationPlan} />
+        </>
       )}
 
       {exams.length === 0 ? (

@@ -10,6 +10,7 @@
 import { useState } from 'react';
 import { Badge, Button, Card, EmptyState, SectionTitle, StatTile, cx } from '../components/primitives';
 import { BalanceBars, ProgressRing, RadialSubjects, SessionTimeline, StudyHeatmap, WeeklyBars, HabitMatrix } from '../components/charts';
+import { IntelligencePanel } from '../components/intelligence';
 import { addDays, formatMinutes } from '../../domain/date';
 import { PERIODS, type PeriodKey } from '../../state/analytics';
 import { navigate } from '../router';
@@ -182,6 +183,19 @@ export function AnalyticsScreen({ onOpenDay }: { onOpenDay: (date: string) => vo
                 hint={summary.streaks.missedYesterday ? 'yesterday was missed — still recoverable' : undefined}
               />
             </div>
+          </section>
+
+          <section>
+            <SectionTitle hint="Progress Intelligence — health, chapter profiles, weekly review, adaptation, performance">Progress Intelligence</SectionTitle>
+            <IntelligencePanel
+              chapterProfiles={analytics.chapterProfiles}
+              subjectHealth={analytics.subjectHealth}
+              weeklyReview={analytics.weeklyReview}
+              adaptationPlan={analytics.adaptationPlan}
+              performance={analytics.performance}
+              onOpenSubject={(id) => navigate(`subject/${id}`)}
+              onOpenChapter={(id) => navigate(`chapter/${id}`)}
+            />
           </section>
 
           <section className="grid gap-4 lg:grid-cols-2">

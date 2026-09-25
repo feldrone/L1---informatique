@@ -7,6 +7,7 @@
 import { useMemo, useState } from 'react';
 import { Badge, Button, Card, EmptyState, StatTile, cx } from '../components/primitives';
 import { ProgressRing, RadialSubjects, WeeklyBars, StudyHeatmap, BalanceBars } from '../components/charts';
+import { SubjectHealthCard, ChapterProfileCard, WeeklyReviewCard, AdaptationCard } from '../components/intelligence';
 import { TaskList } from '../components/task';
 import { formatMinutes } from '../../domain/date';
 import { href, navigate } from '../router';
@@ -19,7 +20,7 @@ export function DashboardScreen({ onOpenDay }: { onOpenDay: (date: string) => vo
   const { subjectLookup, chapterLookup } = useLookups();
   const [heatmapMetric, setHeatmapMetric] = useState<'time' | 'completion' | 'revision' | 'exercises' | 'mockExams'>('time');
 
-  const { todayProgress, streaks, consistency, weekly, insights, goals, balance, priorities, backlog, recoveryPlan, revisionDue } = analytics;
+  const { todayProgress, streaks, consistency, weekly, insights, goals, balance, priorities, backlog, recoveryPlan, revisionDue, subjectHealth, chapterProfiles, weeklyReview, adaptationPlan, performance } = analytics;
 
   const openTasks = useMemo(
     () => analytics.todayTasks.filter((t) => t.status !== 'done' && t.status !== 'skipped' && t.status !== 'deferred'),
@@ -219,6 +220,66 @@ export function DashboardScreen({ onOpenDay }: { onOpenDay: (date: string) => vo
           }
         >
           <BalanceBars entries={balance} onSelect={(id) => navigate(`subject/${id}`)} />
+        </Card>
+
+        <Card title="Subject health" subtitle="Progress Intelligence — transparent health scores">
+          {subjectHealth.length === 0 ? (
+            <EmptyState title="No health data" description="Log study sessions to compute subject health." />
+          ) : (
+            <div className="space-y-3">
+              {subjectHealth
+                .filter((h) => h.label === 'critical' || h.label === 'at-risk')
+                .slice(0, 2)
+                .map((h) => (
+                  <SubjectHealthCard key={h.subjectId} health={h} onSelect={(id) => navigate(`subject/${id}`)} />
+                ))}
+              {subjectHealth.filter((h) => h.label === 'critical' || h.label === 'at-risk').length === 0 &&
+                subjectHealth.slice(0, 2).map((h) => (
+                  <SubjectHealthCard key={h.subjectId} health={h} onSelect={(id) => navigate(`subject/${id}`)} />
+                ))}
+              <Button size="sm" variant="ghost" onClick={() => navigate('analytics')}>
+                Full intelligence →
+              </Button>
+            </div>
+          )}
+        </Card>
+      </section>
+
+      <section className="grid gap-4 lg:grid-cols-2">
+        <Card title="Adaptive planning" subtitle="Explainable recommendations from your recorded behaviour">
+          <AdaptationCard plan={adaptationPlan} />
+        </Card>
+
+        <WeeklyReviewCard review={weeklyReview} />
+      </section>
+
+      <section className="grid gap-4 lg:grid-cols-2">
+        <Card title="Weakest chapters" subtitle="Lowest health — actionable">
+          {chapterProfiles.length === 0 ? (
+            <EmptyState title="No chapter profiles" description="Chapters will appear once you log work." />
+          ) : (
+            <div className="space-y-2.5">
+              {chapterProfiles
+                .filter((p) => p.health.label !== 'not-started')
+                .sort((a, b) => a.health.score - b.health.score)
+                .slice(0, 3)
+                .map((p) => (
+                  <ChapterProfileCard key={p.chapterId} profile={p} onOpen={(id) => navigate(`chapter/${id}`)} />
+                ))}
+            </div>
+          )}
+        </Card>
+
+        <Card title="Performance" subtitle={`${performance.label} · ${performance.overall.completionRate}% completion`}>
+          <div className="grid grid-cols-2 gap-2">
+            <StatTile label="Effective" value={formatMinutes(performance.overall.effectiveMin)} hint={`${performance.overall.efficiency}% efficiency`} />
+            <StatTile label="Active days" value={`${performance.velocity.activeDays}/${performance.velocity.totalDays}`} hint={`${performance.velocity.consistency}%`} />
+            <StatTile label="Focus" value={`${performance.focus.focusSessions}`} hint={`${performance.focus.activeRecallShare}% recall`} />
+            <StatTile label="Tasks" value={`${performance.overall.tasksDone}/${performance.overall.tasksTotal}`} />
+          </div>
+          <Button size="sm" variant="ghost" className="mt-3" onClick={() => navigate('analytics')}>
+            Full analytics →
+          </Button>
         </Card>
       </section>
 

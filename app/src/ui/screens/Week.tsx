@@ -6,6 +6,7 @@
 import { useMemo, useState } from 'react';
 import { Badge, Button, Card, StatTile, cx } from '../components/primitives';
 import { WeeklyBars } from '../components/charts';
+import { WeeklyReviewCard, SubjectHealthCard } from '../components/intelligence';
 import { formatLongDate, formatMinutes, addDays, daysBetween } from '../../domain/date';
 import { navigate } from '../router';
 import { useAnalytics, useStore, useStudy } from '../../state/provider';
@@ -185,6 +186,16 @@ export function WeekScreen({ onOpenDay }: { onOpenDay: (date: string) => void })
             </li>
           ))}
         </ul>
+      </Card>
+
+      <WeeklyReviewCard review={analytics.weeklyReview} />
+
+      <Card title="Subject health this week" subtitle="Health scores based on last 14 days">
+        <div className="space-y-3">
+          {analytics.subjectHealth.slice(0, 4).map((h) => (
+            <SubjectHealthCard key={h.subjectId} health={h} onSelect={(id) => navigate(`subject/${id}`)} />
+          ))}
+        </div>
       </Card>
 
       <Card title="Weekly review" subtitle="Closes the week: what worked, what changed">

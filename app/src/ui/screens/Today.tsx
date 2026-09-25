@@ -8,6 +8,7 @@ import { Badge, Button, Card, Field, Modal, Select, StatTile, TextArea, cx } fro
 import { CheckInCard, DayReviewCard } from '../components/day';
 import { SessionTimeline } from '../components/charts';
 import { TaskList } from '../components/task';
+import { ChapterProfileCard, AdaptationCard } from '../components/intelligence';
 import { formatLongDate, formatMinutes } from '../../domain/date';
 import { navigate } from '../router';
 import { useAnalytics, useStore, useStudy } from '../../state/provider';
@@ -153,6 +154,23 @@ export function TodayScreen({ onOpenDay }: { onOpenDay: (date: string) => void }
       </Card>
 
       <DayReviewCard />
+
+      <Card title="Chapter intelligence" subtitle="Profiles for today's chapters — transparent health and recommendations">
+        {(() => {
+          const todayChapterIds = new Set(tasks.map((t) => t.chapterId).filter(Boolean) as string[]);
+          const profiles = analytics.chapterProfiles.filter((p) => todayChapterIds.has(p.chapterId));
+          if (profiles.length === 0) return <p className="text-sm text-text-muted">No chapter linked to today's tasks yet.</p>;
+          return (
+            <div className="space-y-2.5">
+              {profiles.slice(0, 3).map((p) => (
+                <ChapterProfileCard key={p.chapterId} profile={p} onOpen={(id) => navigate(`chapter/${id}`)} />
+              ))}
+            </div>
+          );
+        })()}
+      </Card>
+
+      <AdaptationCard plan={analytics.adaptationPlan} />
 
       <Modal open={quickComplete !== null} onClose={() => setQuickComplete(null)} title="Complete task">
         <p className="text-sm text-text-muted">{quickComplete?.title}</p>

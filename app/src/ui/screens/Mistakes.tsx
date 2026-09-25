@@ -5,7 +5,8 @@
 
 import { useMemo, useState } from 'react';
 import { Badge, Button, Card, EmptyState, Field, Modal, Select, StatTile, TextArea, cx } from '../components/primitives';
-import { useStore, useStudy } from '../../state/provider';
+import { ChapterProfileCard, SubjectHealthCard } from '../components/intelligence';
+import { useAnalytics, useStore, useStudy } from '../../state/provider';
 import { useLookups } from '../lookups';
 import type { MistakeType } from '../../domain/types';
 
@@ -23,6 +24,7 @@ const TYPES: Array<{ id: MistakeType; label: string; hint: string }> = [
 export function MistakesScreen() {
   const { state, today } = useStudy();
   const store = useStore();
+  const analytics = useAnalytics();
   const { subjectById, chapterById } = useLookups();
   const [filterSubject, setFilterSubject] = useState('');
   const [filterType, setFilterType] = useState<'' | MistakeType>('');
@@ -132,6 +134,33 @@ export function MistakesScreen() {
           </Field>
         </div>
       </Card>
+
+      {analytics.chapterProfiles.filter((p) => p.mistakes.open >= 2).length > 0 && (
+        <Card title="Chapter intelligence — mistake pressure" subtitle="Chapters with 2+ open mistakes">
+          <div className="space-y-2.5">
+            {analytics.chapterProfiles
+              .filter((p) => p.mistakes.open >= 2)
+              .slice(0, 3)
+              .map((p) => (
+                <ChapterProfileCard key={p.chapterId} profile={p} onOpen={(id) => (window.location.hash = `#/chapter/${id}`)} />
+              ))}
+          </div>
+        </Card>
+      )}
+
+      {analytics.subjectHealth.filter((h) => h.stats.openMistakes > 0).length > 0 && (
+        <Card title="Subject health — mistake impact" subtitle="Health scores affected by open mistakes">
+          <div className="space-y-3">
+            {analytics.subjectHealth
+              .filter((h) => h.stats.openMistakes > 0)
+              .sort((a, b) => a.score - b.score)
+              .slice(0, 2)
+              .map((h) => (
+                <SubjectHealthCard key={h.subjectId} health={h} onSelect={(id) => (window.location.hash = `#/subject/${id}`)} />
+              ))}
+          </div>
+        </Card>
+      )}
 
       {mistakes.length === 0 ? (
         <Card title="Mistake list">
