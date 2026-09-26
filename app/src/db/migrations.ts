@@ -3,6 +3,8 @@
  * recorded in `meta`. A migration is never edited after being released — a new one is appended.
  */
 
+import { VERIFIED_RESOURCES } from '../domain/learning';
+
 import type { Database } from 'sql.js';
 
 export interface Migration {
@@ -334,6 +336,22 @@ export const MIGRATIONS: Migration[] = [
       `CREATE TABLE IF NOT EXISTS preferences (key TEXT PRIMARY KEY, value_json TEXT NOT NULL, updated_at TEXT NOT NULL);`,
       `CREATE INDEX IF NOT EXISTS idx_preferences_key ON preferences(key);`,
     ],
+  },
+  {
+    version: 5,
+    name: 'learning-resources-and-task-context',
+    statements: [
+      `CREATE TABLE resources (id TEXT PRIMARY KEY, title TEXT NOT NULL, url TEXT NOT NULL, kind TEXT NOT NULL, subject_id TEXT, chapter_id TEXT, language TEXT NOT NULL DEFAULT 'unknown', verified INTEGER NOT NULL DEFAULT 0);`,
+      `ALTER TABLE study_tasks ADD COLUMN goal TEXT NOT NULL DEFAULT '';`,
+      `ALTER TABLE study_tasks ADD COLUMN reference TEXT NOT NULL DEFAULT '';`,
+      `ALTER TABLE study_tasks ADD COLUMN resource_ids_json TEXT NOT NULL DEFAULT '[]';`,
+    ],
+  },
+  {
+    version: 6,
+    name: 'verified-learning-resource-catalog',
+    statements: VERIFIED_RESOURCES.map(r =>
+      `INSERT OR IGNORE INTO resources (id, title, url, kind, language, verified) VALUES ('${r.id}', '${r.title}', '${r.url}', '${r.kind}', '${r.language}', 1);`),
   },
 ];
 

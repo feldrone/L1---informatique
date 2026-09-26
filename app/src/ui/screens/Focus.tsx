@@ -2,6 +2,7 @@
  * Focus — bilingual.
  */
 
+import { nextLearningTask } from '../../domain/learning';
 import { Button, Card } from '../components/primitives';
 import { FocusTimer } from '../components/timer';
 import { useI18n } from '../../i18n';
@@ -10,8 +11,8 @@ import { useStudy } from '../../state/provider';
 export function FocusScreen({ onOpenDay }: { onOpenDay: (date: string) => void }) {
   const { state, today } = useStudy();
   const { t } = useI18n();
-  const openTasks = state.snapshot.tasks.filter((t) => t.planDate === today && t.status !== 'done' && t.status !== 'skipped');
-  const running = openTasks.find((t) => t.status === 'running');
+  const openTasks = state.snapshot.tasks.filter((t) => t.planDate === today && ['pending', 'running', 'paused'].includes(t.status));
+  const running = nextLearningTask(openTasks);
 
   return (
     <div className="space-y-5">

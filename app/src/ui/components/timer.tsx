@@ -1,259 +1,75 @@
-/**
- * Focus timer (spec §19, §20): configurable focus/break durations, explicit pause, distraction
- * counter and a post-session outcome rating. Nothing is logged until the student confirms the
- * outcome, and interruptions are reported without shame.
- */
-
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { Badge, Button, Field, Select, TextArea, cx } from './primitives';
+/** A single timed learning session; completion never logs the same minutes twice. */
+import { useEffect, useRef, useState } from 'react';
+import type { StudyTask, TaskDifficulty } from '../../domain/types';
 import { useStudy } from '../../state/provider';
-import { formatMinutes } from '../../domain/date';
-import type { StudyTask } from '../../domain/types';
+import { useI18n } from '../../i18n';
+import { Button, Field, Select, TextArea } from './primitives';
+import { LearningContext } from './learning';
 
-type Phase = 'focus' | 'break' | 'idle' | 'done';
-
-export function FocusTimer({
-  tasks,
-  initialTaskId,
-  onFinished,
-}: {
-  tasks: StudyTask[];
-  initialTaskId?: string | null;
-  onFinished?: () => void;
-}) {
+export function FocusTimer({ tasks, initialTaskId, onFinished }: { tasks: StudyTask[]; initialTaskId?: string | null; onFinished?: () => void }) {
   const { store, state } = useStudy();
-  const rules = state.snapshot.preferences.rules;
-  const subjects = state.snapshot.subjects;
-
-  const [taskId, setTaskId] = useState<string | null>(initialTaskId ?? tasks[0]?.id ?? null);
-  const [focusMin, setFocusMin] = useState(rules.focusMin);
-  const [breakMin, setBreakMin] = useState(rules.breakMin);
-  const [phase, setPhase] = useState<Phase>('idle');
-  const [remaining, setRemaining] = useState(rules.focusMin * 60);
+  const { t } = useI18n();
+  const [taskId, setTaskId] = useState(initialTaskId ?? tasks[0]?.id ?? '');
+  const [minutes, setMinutes] = useState(state.snapshot.preferences.rules.focusMin);
+  const [breakMin, setBreakMin] = useState(state.snapshot.preferences.rules.breakMin);
+  const [remaining, setRemaining] = useState(minutes * 60);
+  const [elapsed, setElapsed] = useState(0);
+  const [phase, setPhase] = useState<'idle' | 'focus' | 'paused' | 'break' | 'done'>('idle');
+  const [difficulty, setDifficulty] = useState<TaskDifficulty>('ok');
+  const [note, setNote] = useState('');
   const [interruptions, setInterruptions] = useState(0);
-  const [activeRecall, setActiveRecall] = useState(false);
-  const [rating, setRating] = useState<number | null>(null);
-  const [sessionNote, setSessionNote] = useState('');
-  const [elapsedFocus, setElapsedFocus] = useState(0);
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-
-  const task = useMemo(() => tasks.find((t) => t.id === taskId) ?? null, [tasks, taskId]);
-  const subject = task?.subjectId ? subjects.find((s) => s.id === task.subjectId) ?? null : null;
-
+  const [recall, setRecall] = useState(false);
+  const [step, setStep] = useState<0 | 1 | 2>(0);
+  const [breakRemaining, setBreakRemaining] = useState(0);
+  const saved = useRef(false);
+  const task = tasks.find(item => item.id === taskId);
   useEffect(() => {
-    // A finished block keeps its 00:00 so the panel never shows a full countdown next to
-    // "Session finished"; every other phase shows a whole block again.
-    if (phase === 'done') return;
-    setRemaining((phase === 'break' ? breakMin : focusMin) * 60);
-  }, [focusMin, breakMin, phase]);
-
-  useEffect(() => {
-    if (phase !== 'focus' && phase !== 'break') {
-      if (intervalRef.current) clearInterval(intervalRef.current);
-      return;
-    }
-    intervalRef.current = setInterval(() => {
-      // Updaters stay pure (StrictMode calls them twice): the phase change is derived below.
-      setRemaining((prev) => (prev <= 1 ? 0 : prev - 1));
-      if (phase === 'focus') setElapsedFocus((prev) => prev + 1);
-    }, 1000);
-    return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current);
-    };
-  }, [phase]);
-
+    if (phase === 'idle' && !task) setTaskId(initialTaskId ?? tasks[0]?.id ?? '');
+  }, [task, tasks, initialTaskId, phase]);
   useEffect(() => {
     if (phase !== 'focus' && phase !== 'break') return;
-    if (remaining > 0) return;
-    setPhase(phase === 'focus' ? 'done' : 'idle');
-  }, [remaining, phase]);
-
-  const total = (phase === 'break' ? breakMin : focusMin) * 60;
-  const progress = total === 0 ? 0 : ((total - remaining) / total) * 100;
-  const mm = String(Math.floor(remaining / 60)).padStart(2, '0');
-  const ss = String(remaining % 60).padStart(2, '0');
-
-  const start = () => {
-    setPhase('focus');
-    setRemaining(focusMin * 60);
-    setElapsedFocus(0);
-  };
-
-  const saveSession = (outcomeRating: number | null, finishTask: boolean) => {
-    const minutes = Math.max(1, Math.round(elapsedFocus / 60));
-    store.logFocusSession({
-      taskId,
-      durationMin: minutes,
-      interruptions,
-      outcomeRating,
-      activeRecall,
-      recallScore: activeRecall ? (rating ?? 3) / 5 : null,
-      note: sessionNote,
-    });
-    if (finishTask && task) store.completeTask(task.id, { actualMin: task.actualMin + minutes, note: sessionNote });
-    setPhase('idle');
-    setInterruptions(0);
-    setElapsedFocus(0);
-    setSessionNote('');
-    setRating(null);
+    let last = Date.now();
+    const timer = setInterval(() => {
+      const now = Date.now();
+      const delta = Math.floor((now - last) / 1000);
+      if (delta < 1) return;
+      last += delta * 1000;
+      if (phase === 'focus') { const spent = Math.min(delta, remaining); setElapsed(e => e + spent); setRemaining(r => Math.max(0, r - spent)); }
+      else setBreakRemaining(r => Math.max(0, r - delta));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [phase, remaining]);
+  useEffect(() => { if (phase === 'focus' && remaining === 0) setPhase('done'); if (phase === 'break' && breakRemaining === 0) setPhase('paused'); }, [remaining, breakRemaining, phase]);
+  const save = (finishTask: boolean) => {
+    if (saved.current || elapsed === 0) return;
+    saved.current = true;
+    store.logFocusSession({ taskId: task?.id ?? null, durationMin: Math.max(1, Math.round(elapsed / 60)), interruptions, outcomeRating: difficulty === 'easy' ? 5 : difficulty === 'ok' ? 3 : 1, activeRecall: recall, recallScore: recall ? difficulty === 'easy' ? 1 : difficulty === 'ok' ? 0.6 : 0.2 : null, note, finishTask, difficulty });
+    setPhase('idle'); setElapsed(0); setRemaining(minutes * 60); setInterruptions(0); setNote(''); setStep(0); setRecall(false); setDifficulty('ok');
     onFinished?.();
   };
-
-  return (
-    <div className="space-y-4">
-      <div className="rounded-2xl border border-border bg-surface-raised p-4 sm:p-6">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <div className="flex items-center gap-2">
-            <Badge tone={phase === 'focus' ? 'accent' : phase === 'break' ? 'success' : 'neutral'}>
-              {phase === 'focus' ? 'Focus running' : phase === 'break' ? 'Break' : phase === 'done' ? 'Session finished' : 'Ready'}
-            </Badge>
-            {subject && (
-              <span className="inline-flex items-center gap-1.5 text-xs text-text-muted">
-                <span className="h-2 w-2 rounded-full" style={{ background: subject.color }} />
-                {subject.shortName}
-              </span>
-            )}
-          </div>
-          <span className="tnum text-xs text-text-muted">
-            Elapsed {formatMinutes(Math.round(elapsedFocus / 60))} · {interruptions} interruption(s)
-          </span>
-        </div>
-
-        <div className="mt-4 flex flex-col items-center">
-          <p className="tnum text-6xl font-semibold tracking-tight sm:text-7xl">
-            {mm}:{ss}
-          </p>
-          <div className="mt-3 h-1.5 w-full max-w-sm rounded-full bg-surface-sunken">
-            <div
-              className="h-1.5 rounded-full transition-[width] duration-1000 ease-linear"
-              style={{ width: `${progress}%`, background: phase === 'break' ? 'var(--color-success)' : 'var(--color-accent)' }}
-            />
-          </div>
-          {task && <p className="mt-3 text-center text-sm text-text-muted">{task.title}</p>}
-        </div>
-
-        <div className="mt-5 flex flex-wrap justify-center gap-2">
-          {phase === 'idle' && (
-            <Button variant="primary" size="lg" onClick={start}>
-              Start focus
-            </Button>
-          )}
-          {phase === 'focus' && (
-            <>
-              <Button size="lg" onClick={() => setPhase('break')}>
-                Take a break
-              </Button>
-              <Button
-                size="lg"
-                variant="ghost"
-                onClick={() => {
-                  setInterruptions((n) => n + 1);
-                }}
-              >
-                Log distraction
-              </Button>
-              <Button size="lg" variant="success" onClick={() => setPhase('done')}>
-                Finish session
-              </Button>
-            </>
-          )}
-          {phase === 'break' && (
-            <>
-              <Button variant="primary" size="lg" onClick={() => setPhase('focus')}>
-                Back to focus
-              </Button>
-              <Button size="lg" variant="ghost" onClick={() => setPhase('idle')}>
-                End break
-              </Button>
-            </>
-          )}
-          {phase === 'done' && (
-            <Button variant="success" size="lg" onClick={() => saveSession(rating, false)}>
-              Save session
-            </Button>
-          )}
-        </div>
-
-        {phase === 'done' && (
-          <div className="mt-5 space-y-3 border-t border-border pt-4">
-            <p className="text-sm font-medium">Quick outcome check</p>
-            <div className="flex flex-wrap gap-2">
-              {[1, 2, 3, 4, 5].map((value) => (
-                <Button
-                  key={value}
-                  size="sm"
-                  variant={rating === value ? 'primary' : 'secondary'}
-                  onClick={() => setRating(value)}
-                  aria-label={`Rate this session ${value} out of 5`}
-                >
-                  {value}
-                </Button>
-              ))}
-              <span className="self-center text-[11px] text-text-muted">
-                1 = barely productive · 5 = deep, focused work
-              </span>
-            </div>
-            <label className="flex items-center gap-2 text-xs text-text-muted">
-              <input
-                type="checkbox"
-                checked={activeRecall}
-                onChange={(event) => setActiveRecall(event.target.checked)}
-                className="h-4 w-4 rounded border-border"
-              />
-              This session used active recall (closed book)
-            </label>
-            <TextArea
-              value={sessionNote}
-              onChange={(event) => setSessionNote(event.target.value)}
-              placeholder="What worked, what to fix next time (optional)"
-              aria-label="Session note"
-            />
-            <div className="flex flex-wrap gap-2">
-              <Button variant="success" onClick={() => saveSession(rating, false)}>
-                Save & keep the task open
-              </Button>
-              <Button variant="primary" onClick={() => saveSession(rating, true)}>
-                Save & complete the task
-              </Button>
-            </div>
-          </div>
-        )}
-      </div>
-
-      <div className="grid gap-3 sm:grid-cols-3">
-        <Field label="Task">
-          <Select value={taskId ?? ''} onChange={(event) => setTaskId(event.target.value || null)}>
-            <option value="">No specific task</option>
-            {tasks.map((item) => (
-              <option key={item.id} value={item.id}>
-                {item.title}
-              </option>
-            ))}
-          </Select>
-        </Field>
-        <Field label="Focus length (min)">
-          <Select value={focusMin} onChange={(event) => setFocusMin(Number(event.target.value))}>
-            {[25, 30, 40, 45, 50, 60, 90].map((value) => (
-              <option key={value} value={value}>
-                {value}
-              </option>
-            ))}
-          </Select>
-        </Field>
-        <Field label="Break length (min)">
-          <Select value={breakMin} onChange={(event) => setBreakMin(Number(event.target.value))}>
-            {[5, 10, 15, 20].map((value) => (
-              <option key={value} value={value}>
-                {value}
-              </option>
-            ))}
-          </Select>
-        </Field>
-      </div>
-      <p className={cx('text-[11px] text-text-muted')}>
-        Defaults come from your personal rules (Settings → Personal rules). Interruptions are stored with the
-        session and used by the planner to adjust block sizes — never to judge you.
-      </p>
+  const seconds = phase === 'break' ? breakRemaining : remaining;
+  return <div className="space-y-4 rounded-xl border border-border p-4">
+    <Field label={t('learning.task')}><Select disabled={phase !== 'idle'} value={taskId} onChange={e => setTaskId(e.target.value)}><option value="">{t('learning.noTask')}</option>{tasks.map(item => <option value={item.id} key={item.id}>{item.title}</option>)}</Select></Field>
+    {task && <LearningContext key={task.id} task={task} />}
+    <ol className="flex flex-wrap gap-3">{(['learn','practice','recall'] as const).map((s,i) => <li key={s} aria-current={step === i ? 'step' : undefined} className={step === i ? 'font-bold text-accent' : ''}>{t(`learning.${s}`)}</li>)}</ol>
+    <p>{t(`learning.${(['learn','practice','recall'] as const)[step]}Help`)}</p>
+    {step < 2 && <Button onClick={() => { setStep((step + 1) as 1 | 2); if (step === 1) setRecall(true); }}>{t('learning.nextStep')}</Button>}
+    <p className="text-center text-5xl tnum" role="timer" dir="ltr">{String(Math.floor(seconds / 60)).padStart(2,'0')}:{String(seconds % 60).padStart(2,'0')}</p>
+    <p>{t('learning.elapsed')}: {Math.floor(elapsed / 60)} · {interruptions}</p>
+    <div className="flex flex-wrap gap-2">
+      {phase === 'idle' && <Button variant="primary" onClick={() => { saved.current = false; setRemaining(minutes * 60); setPhase('focus'); if (task) store.startTask(task.id); }}>{t('learning.start')}</Button>}
+      {phase === 'focus' && <><Button onClick={() => { setPhase('paused'); if(task) store.pauseTask(task.id); }}>{t('learning.pause')}</Button><Button onClick={() => { setBreakRemaining(breakMin * 60); setPhase('break'); }}>{t('learning.break')}</Button><Button onClick={() => setInterruptions(n => n + 1)}>{t('learning.distraction')}</Button></>}
+      {(phase === 'paused' || phase === 'break') && <Button onClick={() => { setPhase('focus'); if(task) store.startTask(task.id); }}>{t('learning.resume')}</Button>}
+      {phase !== 'idle' && phase !== 'done' && <Button onClick={() => setPhase('done')}>{t('learning.finish')}</Button>}
+      {task && <Button variant="ghost" onClick={() => { if (elapsed > 0) save(false); store.skipTask(task.id); setPhase('idle'); setRemaining(minutes * 60); }}>{t('learning.skip')}</Button>}
     </div>
-  );
+    {phase === 'done' && <section className="space-y-3"><h3>{t('learning.done')} · {t('learning.outcome')}</h3>
+      <div className="flex gap-2">{(['easy','ok','hard'] as const).map(d => <Button key={d} aria-pressed={difficulty === d} variant={difficulty === d ? 'primary' : 'secondary'} onClick={() => setDifficulty(d)}>{t(`learning.${d === 'ok' ? 'okay' : d}`)}</Button>)}</div>
+      <label><input type="checkbox" checked={recall} onChange={e => setRecall(e.target.checked)} /> {t('learning.recallCheck')}</label>
+      <TextArea aria-label={t('learning.note')} value={note} onChange={e => setNote(e.target.value)} />
+      <Button disabled={elapsed === 0} onClick={() => save(false)}>{t('learning.saveOpen')}</Button> {task && <Button disabled={elapsed === 0} variant="primary" onClick={() => save(true)}>{t('learning.save')}</Button>}
+    </section>}
+    <div className="grid gap-3 sm:grid-cols-2"><Field label={t('learning.length')}><Select disabled={phase !== 'idle'} value={minutes} onChange={e => { setMinutes(Number(e.target.value)); setRemaining(Number(e.target.value) * 60); }}>{Array.from(new Set([minutes,5,15,25,30,45,50,60,90])).sort((a,b)=>a-b).map(m => <option key={m}>{m}</option>)}</Select></Field>
+    <Field label={t('learning.breakLength')}><Select disabled={phase !== 'idle'} value={breakMin} onChange={e => setBreakMin(Number(e.target.value))}>{Array.from(new Set([breakMin,5,10,15])).map(m => <option key={m}>{m}</option>)}</Select></Field></div>
+  </div>;
 }

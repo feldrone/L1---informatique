@@ -3,6 +3,7 @@
  * Start · Pause · Complete · Skip · Reschedule · Mark difficult/easy · Add note.
  */
 
+import { LearningContext } from './learning';
 import { useState } from 'react';
 import { Badge, Button, Select, TextInput, cx } from './primitives';
 import { useStore } from '../../state/provider';
@@ -68,6 +69,7 @@ export function TaskCard({
         (isDone || isSkipped) && 'opacity-80',
       )}
     >
+      {!compact && <details className="mb-3"><summary>{t('learning.workspace')}</summary><LearningContext task={task} /></details>}
       <div className="flex items-start gap-3">
         <span
           className="mt-1 h-2.5 w-2.5 shrink-0 rounded-full"

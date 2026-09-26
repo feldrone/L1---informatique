@@ -4,6 +4,7 @@
  * Mobile first, progressive disclosure, real data only.
  */
 
+import { LearningPlan } from '../components/learning';
 import { useMemo, useState } from 'react';
 import { Badge, Button, Card, EmptyState, StatTile, cx } from '../components/primitives';
 import { ProgressRing, RadialSubjects, WeeklyBars, StudyHeatmap, BalanceBars } from '../components/charts';
@@ -72,6 +73,7 @@ export function DashboardScreen({ onOpenDay }: { onOpenDay: (date: string) => vo
   if (!hasHistory) {
     return (
       <div className="space-y-6">
+      <LearningPlan tasks={analytics.todayTasks} />
         <Card title={t('dashboard.whereAmI')} subtitle={t('dashboard.whereAmI.desc')}>
           <div className="space-y-4">
             <EmptyState title={t('dashboard.noData.title')} description={t('dashboard.noData.desc')} />

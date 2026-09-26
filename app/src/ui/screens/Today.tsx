@@ -2,6 +2,7 @@
  * Today — bilingual, explainable.
  */
 
+import { LearningPlan } from '../components/learning';
 import { useMemo, useState } from 'react';
 import { Badge, Button, Card, Field, Modal, Select, StatTile, TextArea } from '../components/primitives';
 import { CheckInCard, DayReviewCard } from '../components/day';
@@ -54,6 +55,7 @@ export function TodayScreen({ onOpenDay }: { onOpenDay: (date: string) => void }
 
   return (
     <div className="space-y-5">
+      <LearningPlan tasks={analytics.todayTasks} />
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <p className="text-xs tracking-wide text-text-muted uppercase">{formatLongDate(today, lang)}</p>

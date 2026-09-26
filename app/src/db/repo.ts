@@ -6,6 +6,7 @@
 import type { DbClient, SqlValue } from './database';
 import { nowISO } from '../domain/date';
 import type {
+  Resource,
   Achievement,
   AdaptationLog,
   BacklogItem,
@@ -30,6 +31,7 @@ import type {
   UserPreferences,
   WeeklyReviewRecord,
 } from '../domain/types';
+import { selectResources, safeYouTubeUrl } from '../domain/learning';
 import { DEFAULT_RULES } from '../domain/seed/academic';
 
 // ---------------------------------------------------------------------------
@@ -165,6 +167,9 @@ const universityClassRow = (c: UniversityClass): Record<string, SqlValue> => ({
 });
 
 const toTask = (r: Row): StudyTask => ({
+  goal: str(r.goal),
+  reference: str(r.reference),
+  resourceIds: json<string[]>(r.resource_ids_json, []),
   id: str(r.id),
   planId: strOrNull(r.plan_id),
   planDate: str(r.plan_date),
@@ -190,6 +195,9 @@ const toTask = (r: Row): StudyTask => ({
 });
 
 const taskRow = (t: StudyTask): Record<string, SqlValue> => ({
+  goal: t.goal ?? '',
+  reference: t.reference ?? '',
+  resource_ids_json: dump(t.resourceIds ?? []),
   id: t.id,
   plan_id: t.planId,
   plan_date: t.planDate,
@@ -717,6 +725,35 @@ export class Repository {
     this.client.upsert('daily_plans', planRow(plan));
   }
 
+  listResources(): Resource[] {
+    return this.client.all<Row>('SELECT * FROM resources ORDER BY id').map(r => ({
+      id: str(r.id), title: str(r.title), url: str(r.url), kind: str(r.kind) as Resource['kind'],
+      subjectId: strOrNull(r.subject_id), chapterId: strOrNull(r.chapter_id),
+      language: str(r.language) as Resource['language'], verified: bool(r.verified),
+    }));
+  }
+
+  upsertResource(r: Resource): void {
+    if (!r.id || !r.title || !safeYouTubeUrl(r.url) || !['video', 'playlist', 'channel'].includes(r.kind) || !['en', 'ar', 'unknown'].includes(r.language)) throw new Error('Invalid learning resource');
+    this.client.upsert('resources', { id: r.id, title: r.title, url: r.url, kind: r.kind,
+      subject_id: r.subjectId, chapter_id: r.chapterId, language: r.language, verified: boolNum(r.verified) });
+  }
+
+  deleteResource(id: string): void {
+    this.client.transaction(() => {
+      this.client.delete('resources', id);
+      for (const task of this.listTasks()) {
+        if (task.resourceIds?.includes(id)) this.client.upsert('study_tasks', taskRow({ ...task, resourceIds: task.resourceIds.filter(r => r !== id) }));
+      }
+    });
+  }
+
+  private learningTask(task: StudyTask): StudyTask {
+    const chapter = task.chapterId ? this.listChapters().find(c => c.id === task.chapterId) : null;
+    return { ...task, goal: task.goal ?? task.title, reference: task.reference ?? chapter?.sourceRef ?? '',
+      resourceIds: task.resourceIds ?? selectResources(this.listResources(), task).map(r => r.id) };
+  }
+
   listTasks(): StudyTask[] {
     return this.client.all<Row>(`SELECT * FROM study_tasks ORDER BY plan_date, sort_index, id`).map(toTask);
   }
@@ -739,12 +776,12 @@ export class Repository {
   }
 
   upsertTask(task: StudyTask): void {
-    this.client.upsert('study_tasks', taskRow(task));
+    this.client.upsert('study_tasks', taskRow(this.learningTask(task)));
   }
 
   upsertTasks(tasks: StudyTask[]): void {
     this.client.transaction(() => {
-      for (const t of tasks) this.client.upsert('study_tasks', taskRow(t));
+      for (const t of tasks) this.client.upsert('study_tasks', taskRow(this.learningTask(t)));
     });
   }
 
@@ -1000,6 +1037,7 @@ export class Repository {
   // -- maintenance ---------------------------------------------------------
   wipe(): void {
     const tables = [
+      'resources',
       'adaptation_logs',
       'weekly_reviews',
       'events',
@@ -1049,6 +1087,7 @@ export class Repository {
       'achievements',
       'events',
       'weekly_reviews',
+      'resources',
       'adaptation_logs',
     ];
     const out: Record<string, number> = {};

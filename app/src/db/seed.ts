@@ -14,6 +14,7 @@ import {
   SEED_SUBJECTS,
   SEED_TIMETABLE,
 } from '../domain/seed/academic';
+import { VERIFIED_RESOURCES } from '../domain/learning';
 import { nowISO } from '../domain/date';
 import type { Chapter, Subject, UniversityClass } from '../domain/types';
 
@@ -25,6 +26,7 @@ export function applySeed(repo: Repository): void {
   if (isSeeded(repo)) return;
 
   repo.client.transaction(() => {
+    VERIFIED_RESOURCES.forEach(r => repo.upsertResource(r));
     SEED_SUBJECTS.forEach((s, index) => {
       const subject: Subject = {
         id: s.id,

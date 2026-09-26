@@ -2,6 +2,7 @@
  * ChapterDetail — bilingual.
  */
 
+import { LearningContext } from '../components/learning';
 import { useState } from 'react';
 import { Button, Card, EmptyState, Select } from '../components/primitives';
 import { ChapterProfileCard } from '../components/intelligence';
@@ -14,7 +15,7 @@ import type { MasteryLevel } from '../../domain/types';
 import { navigate } from '../router';
 
 export function ChapterDetailScreen({ chapterId }: { chapterId: string }) {
-  const { state } = useStudy();
+  const { state, today } = useStudy();
   const { t, lang } = useI18n();
   const store = useStore();
   const analytics = useAnalytics();
@@ -35,6 +36,14 @@ export function ChapterDetailScreen({ chapterId }: { chapterId: string }) {
         </div>
         <Button size="sm" variant="ghost" onClick={() => navigate(`subject/${chapter.subjectId}`)}>{t('nav.subjects')}</Button>
       </header>
+
+      <Card title={t('learning.workspace')}>
+        <LearningContext task={{ id: chapter.id, title: chapter.title, goal: chapter.title, reference: chapter.sourceRef, subjectId: chapter.subjectId, chapterId: chapter.id, type: 'COURSE', reasons: profile?.recommendations.map(r => r.reason) ?? [], planId: null, planDate: today, plannedMin: 25, priority: 0, priorityLabel: '', status: 'pending', actualMin: 0, startedAt: null, completedAt: null, difficulty: null, note: '', origin: 'manual', skipCount: 0, deferCount: 0, createdAt: '', updatedAt: '' }} />
+        <div className="mt-3 flex flex-wrap gap-2">{(['COURSE','PRACTICE','MEMORY'] as const).map((type, i) => <Button key={type} onClick={() => {
+          const task = state.snapshot.tasks.find(task => task.chapterId === chapter.id && task.type === type && task.planDate === today && ['pending','paused','running'].includes(task.status)) ?? store.addManualTask({ date: today, title: chapter.title, type, plannedMin: 25, subjectId: chapter.subjectId, chapterId: chapter.id });
+          store.startTask(task.id); navigate('focus');
+        }}>{t(`learning.${(['learn','practice','recall'] as const)[i]}`)}</Button>)}</div>
+      </Card>
 
       {profile && <Card title={t('chapterDetail.profile')} subtitle={`${profile.health.label} · ${profile.health.score}/100 · ${profile.evidence.sampleSize} ${t('common.evidence')}`}><ChapterProfileCard profile={profile} /></Card>}
 
