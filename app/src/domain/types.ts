@@ -153,7 +153,22 @@ export interface DailyPlan {
   inputsJson: string;
 }
 
+export interface Resource {
+  id: string;
+  title: string;
+  url: string;
+  kind: 'video' | 'playlist' | 'channel';
+  subjectId: string | null;
+  chapterId: string | null;
+  language: 'en' | 'ar' | 'unknown';
+  verified: boolean;
+}
+
 export interface StudyTask {
+  /** Optional for compatibility with pre-v5 backups. Repository writes supply defaults. */
+  goal?: string;
+  reference?: string;
+  resourceIds?: string[];
   id: string;
   planId: string | null;
   planDate: string;

@@ -15,6 +15,7 @@ import { applySeed, isSeeded } from '../db/seed';
 import { nowISO, nowTimeHHMM, todayISO, addDays, daysBetween, type ISODate } from '../domain/date';
 import { stableId, uid } from '../domain/ids';
 import type {
+  Resource,
   AdaptationLog,
   BacklogItem,
   BlockedBy,
@@ -53,6 +54,7 @@ import { generateInsights } from '../domain/analytics/insights';
 import { evaluateAchievements } from '../domain/analytics/goals';
 
 export interface Snapshot {
+  resources?: Resource[];
   subjects: Subject[];
   chapters: Chapter[];
   timetable: UniversityClass[];
@@ -767,6 +769,8 @@ export class StudyStore {
     durationMin: number;
     interruptions: number;
     outcomeRating: number | null;
+    finishTask?: boolean;
+    difficulty?: TaskDifficulty;
     activeRecall: boolean;
     recallScore: number | null;
     note: string;
@@ -776,6 +780,8 @@ export class StudyStore {
   }): void {
     const repo = this.repository;
     const task = input.taskId ? this.findTask(input.taskId) : null;
+    if (task && ['done', 'skipped'].includes(task.status)) return;
+    if (!Number.isFinite(input.durationMin) || input.durationMin <= 0) return;
     const date = input.date ?? task?.planDate ?? todayISO();
     const start = nowTimeHHMM();
     const session: StudySession = {
@@ -808,13 +814,24 @@ export class StudyStore {
       if (task) {
         repo.upsertTask({
           ...task,
-          status: 'paused',
+          status: input.finishTask ? 'done' : 'paused',
+          completedAt: input.finishTask ? nowISO() : task.completedAt,
+          difficulty: input.difficulty ?? task.difficulty,
+          note: input.note || task.note,
           actualMin: task.actualMin + input.durationMin,
           startedAt: task.startedAt ?? nowISO(),
           updatedAt: nowISO(),
         });
       }
     });
+    if (input.finishTask && task) {
+      repo.appendEvent({ id: uid('ev'), type: 'task.completed', entity: 'study_tasks', entityId: task.id, payloadJson: JSON.stringify({ source: 'focus', sessionId: session.id, actualMin: task.actualMin + input.durationMin }) });
+      for (const item of repo.listBacklog().filter(b => b.taskId === task.id)) repo.upsertBacklogItem({ ...item, state: 'recovered' });
+      if (task.chapterId) {
+        this.refreshChapterMastery(task.chapterId, date);
+        if (input.activeRecall) this.recordRecall(task.chapterId, input.recallScore ?? 0.5, { date, note: input.note, sessionId: session.id });
+      }
+    }
     this.persistNow();
     this.bump();
   }
@@ -1065,6 +1082,16 @@ export class StudyStore {
   }
 
   // ---- curriculum editing -----------------------------------------------
+  saveResource(resource: Resource): void {
+    this.repository.upsertResource(resource);
+    this.bump();
+  }
+
+  deleteResource(id: string): void {
+    this.repository.deleteResource(id);
+    this.bump();
+  }
+
   saveSubject(subject: Subject): void {
     this.repository.upsertSubject(subject);
     this.bump();
@@ -1248,7 +1275,7 @@ export class StudyStore {
         format: 'study-performance-system',
         version: 1,
         exportedAt: nowISO(),
-        data: snapshot,
+        data: { ...snapshot, resources: this.repository.listResources() },
       },
       null,
       2,
@@ -1342,6 +1369,7 @@ export class StudyStore {
         rows<Subject>(data.subjects, 'subjects').forEach((s) => repo.upsertSubject(s));
         rows<Chapter>(data.chapters, 'chapters').forEach((c) => repo.upsertChapter(c));
         rows<UniversityClass>(data.timetable, 'timetable').forEach((c) => repo.upsertUniversityClass(c));
+        rows<Resource>(data.resources, 'resources').forEach(r => repo.upsertResource(r));
         rows<StudyTask>(data.tasks, 'tasks').forEach((t) => repo.upsertTask(t));
         // Sessions use an upsert so restoring a backup over existing history is repeatable.
         rows<StudySession>(data.sessions, 'sessions').forEach((s) => repo.upsertSession(s));
@@ -1385,6 +1413,7 @@ export class StudyStore {
 
 export function loadSnapshot(repo: Repository): Snapshot {
   return {
+    resources: repo.listResources(),
     subjects: repo.listSubjects(),
     chapters: repo.listChapters(),
     timetable: repo.listUniversityClasses(),

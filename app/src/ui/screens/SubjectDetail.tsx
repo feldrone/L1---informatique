@@ -2,6 +2,7 @@
  * SubjectDetail — bilingual.
  */
 
+import { nextLearningTask } from '../../domain/learning';
 import { Button, Card, EmptyState } from '../components/primitives';
 import { SubjectHealthCard, ChapterProfileCard } from '../components/intelligence';
 import { HelpButton } from '../components/contextualHelp';
@@ -21,6 +22,9 @@ export function SubjectDetailScreen({ subjectId }: { subjectId: string }) {
   const health = analytics.subjectHealth.find((h) => h.subjectId === subjectId);
   const chapters = state.snapshot.chapters.filter((c) => c.subjectId === subjectId);
   const profiles = analytics.chapterProfiles.filter((p) => p.subjectId === subjectId).sort((a,b) => a.health.score - b.health.score);
+  const subjectTasks = state.snapshot.tasks.filter(task => task.subjectId === subjectId);
+  const current = nextLearningTask(subjectTasks);
+  const done = subjectTasks.filter(task => task.status === 'done').length;
   const perf = analytics.performance.bySubject.find((s) => s.subjectId === subjectId);
 
   return (
@@ -33,13 +37,18 @@ export function SubjectDetailScreen({ subjectId }: { subjectId: string }) {
         <Button size="sm" variant="ghost" onClick={() => navigate('subjects')}>{t('nav.subjects')}</Button>
       </header>
 
+      <Card title={t('learning.progress')}>
+        <p>{done}/{subjectTasks.length}</p><progress className="w-full" aria-label={t('learning.progress')} value={done} max={Math.max(1, subjectTasks.length)} />
+        <p>{t('learning.current')}: {current?.title ?? t('common.noData')}</p>
+        {current?.chapterId && <Button onClick={() => navigate(`chapter/${current.chapterId}`)}>{t('learning.workspace')}</Button>}
+      </Card>
       {health && <Card title={t('subjectDetail.health')} subtitle={`Score ${health.score}/100 · ${health.label}`}><SubjectHealthCard health={health} /></Card>}
 
       {perf && <Card title={t('subjectDetail.performance')} subtitle={`${perf.name} · ${perf.tasks.completionRate}%`}><div className="grid grid-cols-2 gap-2"><div className="rounded-xl border border-border p-2 text-xs"><span className="text-text-muted">{t('dashboard.tasksCompleted')}</span><p className="tnum">{perf.tasks.done}/{perf.tasks.total}</p></div><div className="rounded-xl border border-border p-2 text-xs"><span className="text-text-muted">{t('charts.effectiveTime')}</span><p className="tnum">{formatMinutes(perf.time.effectiveMin, lang)}</p></div></div></Card>}
 
       <Card title={t('subjectDetail.chapters')} subtitle={`${chapters.length} ${t('dashboard.chapters')}`}>
         <div className="space-y-2">
-          {chapters.map((c) => <div key={c.id} className="flex items-center justify-between rounded-lg border border-border p-2 text-sm"><span>{c.title}</span><span className="text-xs text-text-muted">{MASTERY_TEXT[c.mastery]} · {formatMinutes(c.expectedMin, lang)}</span><Button size="sm" variant="ghost" onClick={() => navigate(`chapter/${c.id}`)}>{t('common.showDetails')}</Button></div>)}
+          {chapters.map((c) => <div key={c.id} className="flex items-center justify-between rounded-lg border border-border p-2 text-sm"><span>{c.title}</span><span className="text-xs text-text-muted">{t('learning.health')}: {profiles.find(p => p.chapterId === c.id)?.health.score ?? '—'}/100 · {MASTERY_TEXT[c.mastery]} · {formatMinutes(c.expectedMin, lang)}</span><Button size="sm" variant="ghost" onClick={() => navigate(`chapter/${c.id}`)}>{t('common.showDetails')}</Button></div>)}
         </div>
       </Card>
 
