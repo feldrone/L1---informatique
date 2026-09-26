@@ -1,21 +1,24 @@
 /**
- * Today — the working screen: check-in, generated plan with reasons, compact task actions and
- * a quick-complete modal so a task can be closed without leaving the page.
+ * Today — bilingual, explainable.
  */
 
 import { useMemo, useState } from 'react';
-import { Badge, Button, Card, Field, Modal, Select, StatTile, TextArea, cx } from '../components/primitives';
+import { Badge, Button, Card, Field, Modal, Select, StatTile, TextArea } from '../components/primitives';
 import { CheckInCard, DayReviewCard } from '../components/day';
 import { SessionTimeline } from '../components/charts';
 import { TaskList } from '../components/task';
-import { formatLongDate, formatMinutes } from '../../domain/date';
-import { navigate } from '../router';
+import { ChapterProfileCard, AdaptationCard } from '../components/intelligence';
+import { HelpButton } from '../components/contextualHelp';
 import { useAnalytics, useStore, useStudy } from '../../state/provider';
+import { useI18n } from '../../i18n';
+import { formatLongDate, formatMinutes } from '../../i18n/formatters';
+import { navigate } from '../router';
 import { useLookups } from '../lookups';
 import type { StudyTask } from '../../domain/types';
 
 export function TodayScreen({ onOpenDay }: { onOpenDay: (date: string) => void }) {
   const { store, today, state } = useStudy();
+  const { t, lang } = useI18n();
   const analytics = useAnalytics();
   const { subjectLookup, chapterLookup } = useLookups();
   const storeApi = useStore();
@@ -37,7 +40,6 @@ export function TodayScreen({ onOpenDay }: { onOpenDay: (date: string) => void }
   const plan = analytics.todayPlan;
   const isMinimumDay = plan?.mode === 'minimum-viable';
   const isExamMode = plan?.mode === 'exam';
-  // Planner notes (class time removed, buffer reserved, behaviour adjustments) are stored with the plan.
   const planNotes: string[] = useMemo(() => {
     if (!plan) return [];
     try {
@@ -54,61 +56,34 @@ export function TodayScreen({ onOpenDay }: { onOpenDay: (date: string) => void }
     <div className="space-y-5">
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <p className="text-xs tracking-wide text-text-muted uppercase">{formatLongDate(today)}</p>
-          <h1 className="text-xl font-semibold">Today&apos;s mission</h1>
+          <p className="text-xs tracking-wide text-text-muted uppercase">{formatLongDate(today, lang)}</p>
+          <h1 className="text-xl font-semibold flex items-center gap-2">{t('today.title')} <HelpButton titleKey="help.weeklyReview.title" descKey="help.weeklyReview.desc" /></h1>
+          <p className="text-xs text-text-muted">{t('today.subtitle')}</p>
         </div>
         <div className="flex flex-wrap gap-1.5">
-          {plan && (
-            <Badge tone={isExamMode ? 'warning' : isMinimumDay ? 'accent' : 'neutral'}>
-              {isExamMode ? 'Exam mode' : isMinimumDay ? 'Minimum viable day' : `Plan: ${plan.mode}`}
-            </Badge>
-          )}
-          <Button size="sm" variant="secondary" onClick={() => store.generatePlan(today)}>
-            Regenerate plan
-          </Button>
-          <Button size="sm" variant="ghost" onClick={() => onOpenDay(today)}>
-            Today&apos;s data
-          </Button>
+          {plan && <Badge tone={isExamMode ? 'warning' : isMinimumDay ? 'accent' : 'neutral'}>{isExamMode ? t('glossary.examRisk') : isMinimumDay ? t('common.noData') : `${t('glossary.studyPlan')}: ${plan.mode}`}</Badge>}
+          <Button size="sm" variant="secondary" onClick={() => store.generatePlan(today)}>{t('today.title')}</Button>
+          <Button size="sm" variant="ghost" onClick={() => onOpenDay(today)}>{t('header.todaysData')}</Button>
         </div>
       </header>
 
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-        <StatTile label="Planned" value={formatMinutes(analytics.todayProgress.plannedMin)} hint={`${analytics.todayProgress.tasksTotal} task(s)`} />
-        <StatTile
-          label="Done"
-          value={`${analytics.todayProgress.tasksDone}/${analytics.todayProgress.tasksTotal}`}
-          tone={analytics.todayProgress.percent >= 80 ? 'success' : undefined}
-        />
-        <StatTile label="Logged" value={formatMinutes(analytics.todayProgress.completedMin)} hint={`${analytics.todayProgress.percent}% of plan`} />
-        <StatTile label="Effective" value={formatMinutes(analytics.todayProgress.effectiveMin)} hint="passive reading weighted lower" />
+        <StatTile label={t('week.planned')} value={formatMinutes(analytics.todayProgress.plannedMin, lang)} hint={`${analytics.todayProgress.tasksTotal} ${t('dashboard.tasksCompleted')}`} />
+        <StatTile label={t('common.completed')} value={`${analytics.todayProgress.tasksDone}/${analytics.todayProgress.tasksTotal}`} tone={analytics.todayProgress.percent >= 80 ? 'success' : undefined} />
+        <StatTile label={t('common.completed')} value={formatMinutes(analytics.todayProgress.completedMin, lang)} hint={`${analytics.todayProgress.percent}%`} />
+        <StatTile label={t('charts.effectiveTime')} value={formatMinutes(analytics.todayProgress.effectiveMin, lang)} />
       </div>
 
       {plan && (
         <div className="rounded-xl border border-border bg-surface-raised p-3">
-          <p className="text-xs text-text-muted">
-            <strong className="text-text">Why this plan:</strong> {plan.rationale}
-          </p>
-          {planNotes.length > 0 && (
-            <ul className="mt-1.5 space-y-0.5 text-xs text-text-muted">
-              {planNotes.map((note, index) => (
-                <li key={index}>• {note}</li>
-              ))}
-            </ul>
-          )}
+          <p className="text-xs text-text-muted"><strong className="text-text">{t('explain.why')}:</strong> {plan.rationale}</p>
+          {planNotes.length > 0 && <ul className="mt-1.5 space-y-0.5 text-xs text-text-muted">{planNotes.map((n, i) => <li key={i}>• {n}</li>)}</ul>}
         </div>
       )}
 
       <CheckInCard />
 
-      <Card
-        title="Plan for today"
-        subtitle="Every task carries its own justification and can be actioned in one tap"
-        action={
-          <Button size="sm" variant="secondary" onClick={() => setShowAdd(true)}>
-            Add task
-          </Button>
-        }
-      >
+      <Card title={t('today.tasks')} subtitle={t('today.subtitle')} action={<Button size="sm" variant="secondary" onClick={() => setShowAdd(true)}>{t('form.add')}</Button>}>
         <TaskList
           tasks={openTasks}
           subjectLookup={subjectLookup}
@@ -121,171 +96,73 @@ export function TodayScreen({ onOpenDay }: { onOpenDay: (date: string) => void }
             setActiveRecall(task.type === 'REVISION' || task.type === 'MEMORY');
             setQuickComplete(task);
           }}
-          emptyTitle={analytics.todayProgress.tasksDone > 0 ? 'Plan complete' : 'No study task planned'}
-          emptyDescription={
-            analytics.todayProgress.tasksDone > 0
-              ? 'Everything planned for today is handled. Revision of weak chapters is the next useful action.'
-              : 'Generate today’s plan — the generator keeps buffer time and never fills 100% of your availability.'
-          }
+          emptyTitle={analytics.todayProgress.tasksDone > 0 ? t('today.handledToday') : t('empty.noTasks')}
+          emptyDescription={analytics.todayProgress.tasksDone > 0 ? t('today.handledToday') : t('empty.noTasksDesc')}
           emptyAction={
             <div className="flex flex-wrap justify-center gap-2">
-              <Button size="sm" variant="primary" onClick={() => store.generatePlan(today)}>
-                Generate plan
-              </Button>
-              {analytics.revisionDue.length > 0 && (
-                <Button size="sm" variant="secondary" onClick={() => navigate('recovery')}>
-                  Schedule due revisions ({analytics.revisionDue.length})
-                </Button>
-              )}
+              <Button size="sm" variant="primary" onClick={() => store.generatePlan(today)}>{t('today.title')}</Button>
+              {analytics.revisionDue.length > 0 && <Button size="sm" variant="secondary" onClick={() => navigate('recovery')}>{t('recovery.title')} ({analytics.revisionDue.length})</Button>}
             </div>
           }
         />
       </Card>
 
       {finished.length > 0 && (
-        <Card title="Handled today" subtitle="Completed and skipped tasks stay visible for traceability">
+        <Card title={t('today.handledToday')} subtitle={t('common.completed')}>
           <TaskList tasks={finished} subjectLookup={subjectLookup} chapterLookup={chapterLookup} compact />
         </Card>
       )}
 
-      <Card title="Study timeline" subtitle="Actual sessions recorded today">
+      <Card title={t('charts.heatmap')} subtitle={t('charts.heatmap')}>
         <SessionTimeline entries={timeline} />
       </Card>
 
       <DayReviewCard />
 
-      <Modal open={quickComplete !== null} onClose={() => setQuickComplete(null)} title="Complete task">
+      <Card title={t('today.chapterIntelligence')} subtitle={t('glossary.chapterProfile')}>
+        {(() => {
+          const todayChapterIds = new Set(tasks.map((t) => t.chapterId).filter(Boolean) as string[]);
+          const profiles = analytics.chapterProfiles.filter((p) => todayChapterIds.has(p.chapterId));
+          if (profiles.length === 0) return <p className="text-sm text-text-muted">{t('common.noData')}</p>;
+          return <div className="space-y-2.5">{profiles.slice(0, 3).map((p) => <ChapterProfileCard key={p.chapterId} profile={p} onOpen={(id) => navigate(`chapter/${id}`)} />)}</div>;
+        })()}
+      </Card>
+
+      <AdaptationCard plan={analytics.adaptationPlan} />
+
+      <Modal open={quickComplete !== null} onClose={() => setQuickComplete(null)} title={t('task.complete')}>
         <p className="text-sm text-text-muted">{quickComplete?.title}</p>
         <div className="mt-3 grid gap-3 sm:grid-cols-2">
-          <Field label="Minutes actually studied">
-            <Select value={actualMin} onChange={(event) => setActualMin(Number(event.target.value))}>
-              {[10, 15, 20, 25, 30, 40, 45, 50, 60, 75, 90, 120].map((value) => (
-                <option key={value} value={value}>
-                  {value} min
-                </option>
-              ))}
-            </Select>
+          <Field label={t('form.plannedMin')}>
+            <Select value={actualMin} onChange={(e) => setActualMin(Number(e.target.value))}>{[10,15,20,25,30,40,45,50,60,75,90,120].map((v) => <option key={v} value={v}>{v} {t('time.minutes')}</option>)}</Select>
           </Field>
-          <Field label="How did it feel?">
-            <Select value={difficulty} onChange={(event) => setDifficulty(event.target.value as 'easy' | 'ok' | 'hard')}>
-              <option value="easy">Easier than expected</option>
-              <option value="ok">As expected</option>
-              <option value="hard">Harder than expected</option>
-            </Select>
+          <Field label={t('form.note')}>
+            <Select value={difficulty} onChange={(e) => setDifficulty(e.target.value as any)}><option value="easy">{t('task.easy')}</option><option value="ok">OK</option><option value="hard">{t('task.difficult')}</option></Select>
           </Field>
         </div>
-        <div className="mt-3">
-          <Field label="Note (optional)">
-            <TextArea value={note} onChange={(event) => setNote(event.target.value)} placeholder="What blocked you or what clicked?" />
-          </Field>
-        </div>
-        <label className="mt-2 flex items-center gap-2 text-xs text-text-muted">
-          <input type="checkbox" checked={activeRecall} onChange={(event) => setActiveRecall(event.target.checked)} className="h-4 w-4" />
-          I used active recall (closed book)
-        </label>
-        {activeRecall && (
-          <div className="mt-2 flex items-center gap-2">
-            <span className="text-xs text-text-muted">Recall quality</span>
-            {[1, 2, 3, 4, 5].map((value) => (
-              <Button key={value} size="sm" variant={recallScore === value ? 'primary' : 'ghost'} onClick={() => setRecallScore(value)}>
-                {value}
-              </Button>
-            ))}
-          </div>
-        )}
+        <div className="mt-3"><Field label={t('form.note')}><TextArea value={note} onChange={(e) => setNote(e.target.value)} placeholder={t('form.note')} /></Field></div>
+        <label className="mt-2 flex items-center gap-2 text-xs text-text-muted"><input type="checkbox" checked={activeRecall} onChange={(e) => setActiveRecall(e.target.checked)} className="h-4 w-4" />{t('glossary.focus')}</label>
+        {activeRecall && <div className="mt-2 flex items-center gap-2"><span className="text-xs text-text-muted">{t('glossary.mastery')}</span>{[1,2,3,4,5].map((v) => <Button key={v} size="sm" variant={recallScore === v ? 'primary' : 'ghost'} onClick={() => setRecallScore(v)}>{v}</Button>)}</div>}
         <div className="mt-4 flex flex-wrap justify-end gap-2">
-          <Button variant="ghost" onClick={() => setQuickComplete(null)}>
-            Cancel
-          </Button>
-          <Button
-            variant="success"
-            onClick={() => {
-              if (!quickComplete) return;
-              storeApi.completeTask(quickComplete.id, {
-                actualMin: actualMin || quickComplete.plannedMin,
-                difficulty,
-                note,
-                activeRecall,
-                recallScore: activeRecall ? (recallScore - 1) / 4 : null,
-              });
-              setQuickComplete(null);
-              setNote('');
-              setActiveRecall(false);
-            }}
-          >
-            Save completion
-          </Button>
+          <Button variant="ghost" onClick={() => setQuickComplete(null)}>{t('common.cancel')}</Button>
+          <Button variant="success" onClick={() => { if (!quickComplete) return; storeApi.completeTask(quickComplete.id, { actualMin: actualMin || quickComplete.plannedMin, difficulty, note, activeRecall, recallScore: activeRecall ? (recallScore - 1) / 4 : null }); setQuickComplete(null); setNote(''); setActiveRecall(false); }}>{t('form.save')}</Button>
         </div>
       </Modal>
 
-      <Modal open={showAdd} onClose={() => setShowAdd(false)} title="Add a task manually">
+      <Modal open={showAdd} onClose={() => setShowAdd(false)} title={t('form.add')}>
         <div className="space-y-3">
-          <Field label="Title">
-            <input
-              value={addTitle}
-              onChange={(event) => setAddTitle(event.target.value)}
-              className="w-full rounded-xl border border-border bg-surface-sunken px-3 py-2 text-sm"
-              placeholder="e.g. Re-read chapter 3 of Analyse 1"
-            />
-          </Field>
+          <Field label={t('form.title')}><input value={addTitle} onChange={(e) => setAddTitle(e.target.value)} className="w-full rounded-xl border border-border bg-surface-sunken px-3 py-2 text-sm" placeholder={t('form.title')} /></Field>
           <div className="grid gap-3 sm:grid-cols-3">
-            <Field label="Subject">
-              <Select value={addSubject} onChange={(event) => setAddSubject(event.target.value)}>
-                <option value="">General</option>
-                {subjects.map((subject) => (
-                  <option key={subject.id} value={subject.id}>
-                    {subject.shortName}
-                  </option>
-                ))}
-              </Select>
-            </Field>
-            <Field label="Type">
-              <Select value={addType} onChange={(event) => setAddType(event.target.value as StudyTask['type'])}>
-                {(['COURSE', 'TD', 'TP', 'REVISION', 'PRACTICE', 'MEMORY', 'ASSESSMENT', 'REVIEW'] as const).map((type) => (
-                  <option key={type} value={type}>
-                    {type}
-                  </option>
-                ))}
-              </Select>
-            </Field>
-            <Field label="Planned minutes">
-              <Select value={addMinutes} onChange={(event) => setAddMinutes(Number(event.target.value))}>
-                {[15, 20, 25, 30, 45, 50, 60, 90, 120].map((value) => (
-                  <option key={value} value={value}>
-                    {value} min
-                  </option>
-                ))}
-              </Select>
-            </Field>
+            <Field label={t('form.subject')}><Select value={addSubject} onChange={(e) => setAddSubject(e.target.value)}><option value="">{t('common.noData')}</option>{subjects.map((s) => <option key={s.id} value={s.id}>{s.shortName}</option>)}</Select></Field>
+            <Field label={t('form.type')}><Select value={addType} onChange={(e) => setAddType(e.target.value as any)}>{(['COURSE','TD','TP','REVISION','PRACTICE','MEMORY','ASSESSMENT','REVIEW'] as const).map((type) => <option key={type} value={type}>{type}</option>)}</Select></Field>
+            <Field label={t('form.plannedMin')}><Select value={addMinutes} onChange={(e) => setAddMinutes(Number(e.target.value))}>{[15,20,25,30,45,50,60,90,120].map((v) => <option key={v} value={v}>{v} {t('time.minutes')}</option>)}</Select></Field>
           </div>
           <div className="flex justify-end gap-2">
-            <Button variant="ghost" onClick={() => setShowAdd(false)}>
-              Cancel
-            </Button>
-            <Button
-              variant="primary"
-              onClick={() => {
-                storeApi.addManualTask({
-                  date: today,
-                  title: addTitle,
-                  type: addType,
-                  plannedMin: addMinutes,
-                  subjectId: addSubject || null,
-                  chapterId: null,
-                });
-                setShowAdd(false);
-                setAddTitle('');
-              }}
-            >
-              Add to today
-            </Button>
+            <Button variant="ghost" onClick={() => setShowAdd(false)}>{t('common.cancel')}</Button>
+            <Button variant="primary" onClick={() => { storeApi.addManualTask({ date: today, title: addTitle, type: addType, plannedMin: addMinutes, subjectId: addSubject || null, chapterId: null }); setShowAdd(false); setAddTitle(''); }}>{t('form.add')}</Button>
           </div>
         </div>
       </Modal>
-
-      <p className={cx('text-[11px] text-text-muted')}>
-        Skipping a task moves it to the backlog automatically — that is recorded as a plan change, never as a failure.
-      </p>
     </div>
   );
 }

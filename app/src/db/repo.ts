@@ -7,6 +7,7 @@ import type { DbClient, SqlValue } from './database';
 import { nowISO } from '../domain/date';
 import type {
   Achievement,
+  AdaptationLog,
   BacklogItem,
   Chapter,
   CheckIn,
@@ -27,6 +28,7 @@ import type {
   Subject,
   UniversityClass,
   UserPreferences,
+  WeeklyReviewRecord,
 } from '../domain/types';
 import { DEFAULT_RULES } from '../domain/seed/academic';
 
@@ -577,13 +579,14 @@ export class Repository {
 
   loadPreferences(): UserPreferences {
     const raw = this.getSetting('preferences');
-    const fallback: UserPreferences = { displayName: 'L1 SINF', theme: 'dark', rules: DEFAULT_RULES };
+    const fallback: UserPreferences = { displayName: 'L1 SINF', theme: 'dark', language: 'en', rules: DEFAULT_RULES };
     if (!raw) return fallback;
     try {
       const parsed = JSON.parse(raw) as Partial<UserPreferences>;
       return {
         displayName: parsed.displayName ?? fallback.displayName,
         theme: parsed.theme === 'light' ? 'light' : 'dark',
+        language: parsed.language === 'ar' ? 'ar' : 'en',
         rules: { ...DEFAULT_RULES, ...(parsed.rules ?? {}) },
       };
     } catch {
@@ -921,9 +924,84 @@ export class Repository {
     return this.client.all<Row>(`SELECT * FROM events ORDER BY at`).map(toEvent);
   }
 
+  // -- weekly reviews & adaptation logs (Phase 3) --------------------------
+  listWeeklyReviews(): WeeklyReviewRecord[] {
+    return this.client.all<Row>(`SELECT * FROM weekly_reviews ORDER BY week_start DESC`).map((r) => ({
+      id: str(r.id),
+      weekStart: str(r.week_start),
+      weekEnd: str(r.week_end),
+      generatedAt: str(r.generated_at),
+      summaryJson: str(r.summary_json, '{}'),
+      notes: str(r.notes),
+      createdAt: str(r.created_at),
+    }));
+  }
+
+  getWeeklyReview(weekStart: string): WeeklyReviewRecord | null {
+    const row = this.client.get<Row>(`SELECT * FROM weekly_reviews WHERE week_start = ?`, [weekStart]);
+    if (!row) return null;
+    return {
+      id: str(row.id),
+      weekStart: str(row.week_start),
+      weekEnd: str(row.week_end),
+      generatedAt: str(row.generated_at),
+      summaryJson: str(row.summary_json, '{}'),
+      notes: str(row.notes),
+      createdAt: str(row.created_at),
+    };
+  }
+
+  upsertWeeklyReview(record: WeeklyReviewRecord): void {
+    this.client.upsert('weekly_reviews', {
+      id: record.id,
+      week_start: record.weekStart,
+      week_end: record.weekEnd,
+      generated_at: record.generatedAt,
+      summary_json: record.summaryJson,
+      notes: record.notes,
+      created_at: record.createdAt,
+    });
+  }
+
+  listAdaptationLogs(): AdaptationLog[] {
+    return this.client.all<Row>(`SELECT * FROM adaptation_logs ORDER BY date DESC, priority DESC`).map((r) => ({
+      id: str(r.id),
+      date: str(r.date),
+      kind: str(r.kind),
+      text: str(r.text),
+      reason: str(r.reason),
+      evidenceJson: str(r.evidence_json, '{}'),
+      priority: num(r.priority),
+      applied: bool(r.applied),
+      appliedAt: strOrNull(r.applied_at),
+      createdAt: str(r.created_at),
+    }));
+  }
+
+  upsertAdaptationLog(log: AdaptationLog): void {
+    this.client.upsert('adaptation_logs', {
+      id: log.id,
+      date: log.date,
+      kind: log.kind,
+      text: log.text,
+      reason: log.reason,
+      evidence_json: log.evidenceJson,
+      priority: log.priority,
+      applied: boolNum(log.applied),
+      applied_at: log.appliedAt,
+      created_at: log.createdAt,
+    });
+  }
+
+  markAdaptationApplied(id: string, appliedAt: string): void {
+    this.client.update('adaptation_logs', id, { applied: 1, applied_at: appliedAt });
+  }
+
   // -- maintenance ---------------------------------------------------------
   wipe(): void {
     const tables = [
+      'adaptation_logs',
+      'weekly_reviews',
       'events',
       'insights',
       'mastery_history',
@@ -970,6 +1048,8 @@ export class Repository {
       'habits',
       'achievements',
       'events',
+      'weekly_reviews',
+      'adaptation_logs',
     ];
     const out: Record<string, number> = {};
     for (const t of tables) out[t] = this.client.count(t);

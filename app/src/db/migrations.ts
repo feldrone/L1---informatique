@@ -292,6 +292,49 @@ export const MIGRATIONS: Migration[] = [
       `CREATE INDEX IF NOT EXISTS idx_mistakes_subject ON mistakes(subject_id);`,
     ],
   },
+  {
+    version: 3,
+    name: 'progress-intelligence-weekly-review-and-adaptation',
+    statements: [
+      // Weekly reviews: deterministic summaries persisted so user notes survive reloads.
+      `CREATE TABLE IF NOT EXISTS weekly_reviews (
+        id TEXT PRIMARY KEY,
+        week_start TEXT NOT NULL,
+        week_end TEXT NOT NULL,
+        generated_at TEXT NOT NULL,
+        summary_json TEXT NOT NULL DEFAULT '{}',
+        notes TEXT NOT NULL DEFAULT '',
+        created_at TEXT NOT NULL
+      );`,
+      // Adaptation log: every adaptive suggestion and whether it was applied, for auditability.
+      `CREATE TABLE IF NOT EXISTS adaptation_logs (
+        id TEXT PRIMARY KEY,
+        date TEXT NOT NULL,
+        kind TEXT NOT NULL,
+        text TEXT NOT NULL,
+        reason TEXT NOT NULL DEFAULT '',
+        evidence_json TEXT NOT NULL DEFAULT '{}',
+        priority INTEGER NOT NULL DEFAULT 0,
+        applied INTEGER NOT NULL DEFAULT 0,
+        applied_at TEXT,
+        created_at TEXT NOT NULL
+      );`,
+      `CREATE INDEX IF NOT EXISTS idx_weekly_reviews_start ON weekly_reviews(week_start);`,
+      `CREATE INDEX IF NOT EXISTS idx_adaptation_logs_date ON adaptation_logs(date);`,
+      `CREATE INDEX IF NOT EXISTS idx_adaptation_logs_kind ON adaptation_logs(kind);`,
+    ],
+  },
+  {
+    version: 4,
+    name: 'bilingual-language-preference',
+    statements: [
+      // No schema change needed for language: preferences are stored as JSON.
+      // We add a meta entry and ensure preferences table exists.
+      // This migration is idempotent and forward-only, preserving existing data.
+      `CREATE TABLE IF NOT EXISTS preferences (key TEXT PRIMARY KEY, value_json TEXT NOT NULL, updated_at TEXT NOT NULL);`,
+      `CREATE INDEX IF NOT EXISTS idx_preferences_key ON preferences(key);`,
+    ],
+  },
 ];
 
 export const LATEST_SCHEMA_VERSION = MIGRATIONS.reduce((acc, m) => Math.max(acc, m.version), 0);

@@ -99,7 +99,7 @@ export function applySeed(repo: Repository): void {
       repo.upsertGoal({ ...g, createdAt: nowISO() });
     });
 
-    repo.savePreferences({ displayName: 'L1 SINF', theme: 'dark', rules: DEFAULT_RULES });
+    repo.savePreferences({ displayName: 'L1 SINF', theme: 'dark', language: 'en', rules: DEFAULT_RULES });
     repo.setSetting('academic:meta', SEED_META);
     repo.setSetting('seed:version', 1);
   });

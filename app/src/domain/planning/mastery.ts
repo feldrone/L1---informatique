@@ -131,7 +131,8 @@ export function estimateMastery(signals: MasterySignals, current: MasteryLevel):
     ),
   );
 
-  const finalLevel = Math.max(0, Math.min(5, Math.max(level, cappedCurrent === 0 ? 0 : Math.min(level, cappedCurrent + 1)))) as MasteryLevel;
+  // Cap upward progress to at most +1 per completion to avoid 0→2 jump in one go.
+  const finalLevel = Math.max(0, Math.min(5, Math.min(level, cappedCurrent + 1))) as MasteryLevel;
 
   return {
     level: finalLevel,

@@ -88,11 +88,24 @@ export function StudyProvider({ children }: { children: ReactNode }) {
   );
 
   const theme = state.snapshot.preferences.theme;
+  const language = state.snapshot.preferences.language ?? 'en';
 
   useEffect(() => {
     if (typeof document === 'undefined') return;
     document.documentElement.classList.toggle('dark', theme === 'dark');
   }, [theme]);
+
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+    // Persist language to localStorage for instant first paint and sync with DB
+    try {
+      const stored = localStorage.getItem('study-lang');
+      if (stored !== language) localStorage.setItem('study-lang', language);
+    } catch {}
+    document.documentElement.lang = language;
+    document.documentElement.dir = language === 'ar' ? 'rtl' : 'ltr';
+    document.body.dir = language === 'ar' ? 'rtl' : 'ltr';
+  }, [language]);
 
   const value: StudyContextValue = useMemo(
     () => ({

@@ -1,6 +1,7 @@
 /** Shared UI primitives — calm, academic, accessible. */
 
 import { useEffect, useRef, type RefObject } from 'react';
+import { useI18n } from '../../i18n';
 import type {
   ButtonHTMLAttributes,
   InputHTMLAttributes,
@@ -119,11 +120,28 @@ export function Badge({
 
 /** Data-provenance badge: never let an unverified value look official. */
 export function ProvenanceBadge({ provenance }: { provenance: 'verified' | 'partial' | 'to-confirm' | 'supplementary' }) {
-  const map = {
-    verified: { label: 'verified', tone: 'success' as const, title: 'Read from an official UBMA source' },
-    partial: { label: 'partial data', tone: 'warning' as const, title: 'Module confirmed, some metadata not published' },
-    'to-confirm': { label: 'to confirm', tone: 'danger' as const, title: 'Provisional value — verify and edit' },
-    supplementary: { label: 'supplementary', tone: 'neutral' as const, title: 'Repository material, not an official programme' },
+  const { lang } = useI18n();
+  const map: Record<string, { label: string; tone: 'success' | 'warning' | 'danger' | 'neutral'; title: string }> = {
+    verified: {
+      label: lang === 'ar' ? 'موثق' : 'verified',
+      tone: 'success',
+      title: lang === 'ar' ? 'مأخوذ من مصدر رسمي UBMA' : 'Read from an official UBMA source',
+    },
+    partial: {
+      label: lang === 'ar' ? 'بيانات جزئية' : 'partial data',
+      tone: 'warning',
+      title: lang === 'ar' ? 'المادة مؤكدة، بعض البيانات غير منشورة' : 'Module confirmed, some metadata not published',
+    },
+    'to-confirm': {
+      label: lang === 'ar' ? 'للتأكيد' : 'to confirm',
+      tone: 'danger',
+      title: lang === 'ar' ? 'قيمة مؤقتة — تحقق وعدل' : 'Provisional value — verify and edit',
+    },
+    supplementary: {
+      label: lang === 'ar' ? 'تكميلي' : 'supplementary',
+      tone: 'neutral',
+      title: lang === 'ar' ? 'مادة تكميلية، ليست برنامجًا رسميًا' : 'Repository material, not an official programme',
+    },
   };
   const entry = map[provenance];
   return (
@@ -285,6 +303,7 @@ export function Modal({
   wide?: boolean;
 }) {
   const ref = useRef<HTMLDivElement | null>(null);
+  const { t } = useI18n();
   useDialogBehavior(open, onClose, ref);
   if (!open) return null;
   return (
@@ -307,8 +326,8 @@ export function Modal({
       >
         <div className="mb-3 flex items-center justify-between gap-4">
           <h2 className="text-base font-semibold">{title}</h2>
-          <Button variant="ghost" size="sm" onClick={onClose} aria-label="Close dialog">
-            Close
+          <Button variant="ghost" size="sm" onClick={onClose} aria-label={t('a11y.closeDialog')}>
+            {t('common.close')}
           </Button>
         </div>
         {children}

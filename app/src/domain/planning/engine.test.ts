@@ -103,7 +103,10 @@ describe('mastery estimator', () => {
       quizAccuracy: 0.85,
       quizSamples: 12,
     });
-    expect(estimateMastery(signals, 3).level).toBe(5);
+    // With +1 cap per estimation, from 4 with strong evidence it reaches 5
+    expect(estimateMastery(signals, 4).level).toBe(5);
+    // From 3 with same evidence it should reach at least 4 (capped to +1)
+    expect(estimateMastery(signals, 3).level).toBeGreaterThanOrEqual(4);
   });
 
   it('lowers the proposal when recall fails', () => {

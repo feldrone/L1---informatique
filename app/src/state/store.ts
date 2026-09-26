@@ -15,6 +15,7 @@ import { applySeed, isSeeded } from '../db/seed';
 import { nowISO, nowTimeHHMM, todayISO, addDays, daysBetween, type ISODate } from '../domain/date';
 import { stableId, uid } from '../domain/ids';
 import type {
+  AdaptationLog,
   BacklogItem,
   BlockedBy,
   Chapter,
@@ -40,6 +41,7 @@ import type {
   UniversityClass,
   UserPreferences,
   UserRules,
+  WeeklyReviewRecord,
 } from '../domain/types';
 import { generateDailyPlan } from '../domain/planning/planner';
 import { backlogFromTasks, classifyMissedWork, generateRecoveryPlan } from '../domain/planning/recovery';
@@ -68,6 +70,8 @@ export interface Snapshot {
   habits: Habit[];
   achievements: Achievement[];
   insights: InsightRecord[];
+  weeklyReviews: WeeklyReviewRecord[];
+  adaptationLogs: AdaptationLog[];
   preferences: UserPreferences;
 }
 
@@ -101,7 +105,9 @@ const EMPTY_SNAPSHOT: Snapshot = {
   habits: [],
   achievements: [],
   insights: [],
-  preferences: { displayName: 'L1 SINF', theme: 'dark', rules: {
+  weeklyReviews: [],
+  adaptationLogs: [],
+  preferences: { displayName: 'L1 SINF', theme: 'dark', language: 'en' as const, rules: {
     minDailyMin: 60,
     minWeeklyMin: 600,
     maxDailyMin: 300,
@@ -1094,6 +1100,56 @@ export class StudyStore {
     this.bump();
   }
 
+  // ---- Phase 3: weekly reviews & adaptation logs --------------------------
+  saveWeeklyReview(record: import('../domain/types').WeeklyReviewRecord): void {
+    this.repository.upsertWeeklyReview(record);
+    this.persistNow();
+    this.bump();
+  }
+
+  saveAdaptationLog(log: import('../domain/types').AdaptationLog): void {
+    this.repository.upsertAdaptationLog(log);
+    this.persistNow();
+    this.bump();
+  }
+
+  applyAdaptation(id: string): void {
+    this.repository.markAdaptationApplied(id, nowISO());
+    this.persistNow();
+    this.bump();
+  }
+
+  logAdaptationSuggestions(
+    suggestions: Array<{
+      kind: string;
+      text: string;
+      reason: string;
+      evidence: string;
+      priority: number;
+    }>,
+    date: ISODate,
+  ): void {
+    const repo = this.repository;
+    repo.transaction(() => {
+      for (const s of suggestions) {
+        repo.upsertAdaptationLog({
+          id: uid('adapt'),
+          date,
+          kind: s.kind,
+          text: s.text,
+          reason: s.reason,
+          evidenceJson: JSON.stringify({ evidence: s.evidence }),
+          priority: s.priority,
+          applied: false,
+          appliedAt: null,
+          createdAt: nowISO(),
+        });
+      }
+    });
+    this.persistNow();
+    this.bump();
+  }
+
   // ---- data portability --------------------------------------------------
   // ---- convenience helpers used by screens --------------------------------
   /** Current planning rules (personal rules live in preferences so they stay editable + exportable). */
@@ -1346,6 +1402,8 @@ export function loadSnapshot(repo: Repository): Snapshot {
     habits: repo.listHabits(),
     achievements: repo.listAchievements(),
     insights: repo.listInsights(),
+    weeklyReviews: repo.listWeeklyReviews(),
+    adaptationLogs: repo.listAdaptationLogs(),
     preferences: repo.loadPreferences(),
   };
 }

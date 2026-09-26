@@ -9,7 +9,8 @@ import type { HabitDayCell, HeatmapCell, HeatmapMetric } from '../../domain/anal
 import { HEATMAP_METRICS } from '../../domain/analytics/heatmap';
 import type { SubjectDistributionEntry, SessionTimelineEntry } from '../../domain/analytics/progress';
 import type { WeeklyDayStat } from '../../domain/analytics/progress';
-import { formatMinutes } from '../../domain/date';
+import { useI18n } from '../../i18n';
+import { formatMinutes } from '../../i18n/formatters';
 
 /** Smooth numeric transition used for percentages and totals. */
 export function useCountUp(target: number, duration = 650): number {
@@ -155,6 +156,7 @@ export function RadialSubjects({
   onSelect?: (subjectId: string) => void;
   emptyLabel?: string;
 }) {
+  const { lang } = useI18n();
   const [activeId, setActiveId] = useState<string | null>(null);
   const total = entries.reduce((acc, e) => acc + Math.max(e.effectiveMin, e.actualMin), 0);
 
@@ -206,7 +208,7 @@ export function RadialSubjects({
                 className="ring-segment cursor-pointer"
                 tabIndex={0}
                 role="button"
-                aria-label={`${entry.shortName}: ${formatMinutes(entry.effectiveMin || entry.actualMin)}, ${entry.share}% of today's study time. Open subject.`}
+                aria-label={`${entry.shortName}: ${formatMinutes(entry.effectiveMin || entry.actualMin, lang)}, ${entry.share}% of today's study time. Open subject.`}
                 onMouseEnter={() => setActiveId(entry.subjectId)}
                 onMouseLeave={() => setActiveId(null)}
                 onFocus={() => setActiveId(entry.subjectId)}
@@ -229,7 +231,7 @@ export function RadialSubjects({
               <p className="text-[11px] font-semibold tracking-wide uppercase" style={{ color: active.color }}>
                 {active.shortName}
               </p>
-              <p className="tnum text-2xl font-semibold">{formatMinutes(active.effectiveMin || active.actualMin)}</p>
+              <p className="tnum text-2xl font-semibold">{formatMinutes(active.effectiveMin || active.actualMin, lang)}</p>
               <p className="text-[11px] text-text-muted">
                 {active.share}% · {active.completionPercent}% of plan
               </p>
@@ -283,6 +285,7 @@ export function WeeklyBars({
   targetWeeklyMin?: number;
   onSelect?: (date: string) => void;
 }) {
+  const { lang } = useI18n();
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
   const max = Math.max(...days.map((d) => Math.max(d.plannedMin, d.actualMin)), 60);
   const active = activeIndex !== null ? days[activeIndex] : null;
@@ -293,10 +296,10 @@ export function WeeklyBars({
     <div>
       <div className="mb-2 flex flex-wrap items-baseline justify-between gap-2 text-xs text-text-muted">
         <span>
-          Planned <strong className="tnum text-text">{formatMinutes(totalPlanned)}</strong> · Actual{' '}
-          <strong className="tnum text-text">{formatMinutes(totalActual)}</strong>
+          Planned <strong className="tnum text-text">{formatMinutes(totalPlanned, lang)}</strong> · Actual{' '}
+          <strong className="tnum text-text">{formatMinutes(totalActual, lang)}</strong>
         </span>
-        {targetWeeklyMin ? <span>Weekly target {formatMinutes(targetWeeklyMin)}</span> : null}
+        {targetWeeklyMin ? <span>Weekly target {formatMinutes(targetWeeklyMin, lang)}</span> : null}
       </div>
       <div
         className="scroll-thin flex w-full min-w-0 items-end gap-2 overflow-x-auto pb-1"
@@ -321,7 +324,7 @@ export function WeeklyBars({
               <div
                 className="w-1/3 rounded-t bg-border"
                 style={{ height: `${Math.max(2, (day.plannedMin / max) * 100)}%` }}
-                title={`Planned ${formatMinutes(day.plannedMin)}`}
+                title={`Planned ${formatMinutes(day.plannedMin, lang)}`}
               />
               <div
                 className="animate-grow-w w-1/3 rounded-t"
@@ -338,10 +341,10 @@ export function WeeklyBars({
       <div className="mt-2 min-h-8 rounded-lg bg-surface-sunken/70 px-3 py-1.5 text-xs text-text-muted">
         {active ? (
           <span>
-            <strong className="text-text">{active.label}</strong> · {formatMinutes(active.actualMin)} done /{' '}
-            {formatMinutes(active.plannedMin)} planned ({active.completionPercent}%)
+            <strong className="text-text">{active.label}</strong> · {formatMinutes(active.actualMin, lang)} done /{' '}
+            {formatMinutes(active.plannedMin, lang)} planned ({active.completionPercent}%)
             {active.plannedMin > 0 && (
-              <> · difference {formatMinutes(active.actualMin - active.plannedMin)}</>
+              <> · difference {formatMinutes(active.actualMin - active.plannedMin, lang)}</>
             )}
           </span>
         ) : (
@@ -492,6 +495,7 @@ export function HabitMatrix({
   onPrevMonth?: () => void;
   onNextMonth?: () => void;
 }) {
+  const { lang } = useI18n();
   const size = 66;
   const radius = 24;
   const circumference = 2 * Math.PI * radius;
@@ -580,7 +584,7 @@ export function HabitMatrix({
                   {day.dayOfMonth}
                 </text>
               </svg>
-              <span className="tnum text-[10px] text-text-muted">{day.minutes > 0 ? formatMinutes(day.minutes) : '—'}</span>
+              <span className="tnum text-[10px] text-text-muted">{day.minutes > 0 ? formatMinutes(day.minutes, lang) : '—'}</span>
             </button>
           );
         })}
@@ -612,6 +616,7 @@ export function HabitMatrix({
 // ---------------------------------------------------------------------------
 
 export function SessionTimeline({ entries }: { entries: SessionTimelineEntry[] }) {
+  const { lang } = useI18n();
   if (entries.length === 0) {
     return (
       <p className="text-xs text-text-muted">
@@ -632,7 +637,7 @@ export function SessionTimeline({ entries }: { entries: SessionTimelineEntry[] }
           <div className="min-w-0 flex-1">
             <div className="flex items-baseline justify-between gap-2">
               <span className="truncate text-sm">{entry.subjectName}</span>
-              <span className="tnum text-xs text-text-muted">{formatMinutes(entry.minutes)}</span>
+              <span className="tnum text-xs text-text-muted">{formatMinutes(entry.minutes, lang)}</span>
             </div>
             <div className="mt-1 h-1.5 w-full rounded-full bg-surface-sunken">
               <div
@@ -691,6 +696,7 @@ export function BalanceBars({
   }>;
   onSelect?: (subjectId: string) => void;
 }) {
+  const { lang } = useI18n();
   const max = Math.max(...entries.map((e) => Math.max(e.plannedMin, e.effectiveMin, e.actualMin)), 60);
   return (
     <ul className="space-y-3">
@@ -716,10 +722,10 @@ export function BalanceBars({
               </span>
             </div>
             <div className="mt-1.5 space-y-1">
-              <div className="h-1.5 w-full rounded-full bg-surface-sunken" title={`Planned ${formatMinutes(entry.plannedMin)}`}>
+              <div className="h-1.5 w-full rounded-full bg-surface-sunken" title={`Planned ${formatMinutes(entry.plannedMin, lang)}`}>
                 <div className="h-1.5 rounded-full bg-border" style={{ width: `${(entry.plannedMin / max) * 100}%` }} />
               </div>
-              <div className="h-2 w-full rounded-full bg-surface-sunken" title={`Actual ${formatMinutes(entry.effectiveMin || entry.actualMin)}`}>
+              <div className="h-2 w-full rounded-full bg-surface-sunken" title={`Actual ${formatMinutes(entry.effectiveMin || entry.actualMin, lang)}`}>
                 <div
                   className="animate-grow-w h-2 rounded-full"
                   style={{
