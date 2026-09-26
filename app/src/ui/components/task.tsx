@@ -6,7 +6,9 @@
 import { useState } from 'react';
 import { Badge, Button, Select, TextInput, cx } from './primitives';
 import { useStore } from '../../state/provider';
-import { addDays, formatMinutes, type ISODate } from '../../domain/date';
+import { addDays, type ISODate } from '../../domain/date';
+import { useI18n } from '../../i18n';
+import { formatMinutes } from '../../i18n/formatters';
 import type { StudyTask, TaskDifficulty } from '../../domain/types';
 
 const TYPE_LABEL: Record<StudyTask['type'], string> = {
@@ -50,6 +52,7 @@ export function TaskCard({
   onRequestComplete?: (task: StudyTask) => void;
 }) {
   const store = useStore();
+  const { t, lang } = useI18n();
   const [expanded, setExpanded] = useState(false);
   const [note, setNote] = useState(task.note);
   const [showReschedule, setShowReschedule] = useState(false);
@@ -74,11 +77,11 @@ export function TaskCard({
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
             <Badge tone={STATUS_TONE[task.status]}>{STATUS_TONE[task.status] === 'neutral' ? TYPE_LABEL[task.type] : task.status}</Badge>
-            {task.origin === 'recovery' && <Badge tone="warning">recovery</Badge>}
-            {task.origin === 'minimum-day' && <Badge tone="accent">minimum day</Badge>}
-            {task.priorityLabel && <Badge tone="neutral">{task.priorityLabel} priority</Badge>}
-            <span className="tnum text-xs text-text-muted">{formatMinutes(task.plannedMin)}</span>
-            {task.startedAt && <span className="tnum text-xs text-text-muted">· started {task.startedAt.slice(11, 16)}</span>}
+            {task.origin === 'recovery' && <Badge tone="warning">{lang === 'ar' ? 'استدراك' : 'recovery'}</Badge>}
+            {task.origin === 'minimum-day' && <Badge tone="accent">{lang === 'ar' ? 'يوم أدنى' : 'minimum day'}</Badge>}
+            {task.priorityLabel && <Badge tone="neutral">{task.priorityLabel} {lang === 'ar' ? 'أولوية' : 'priority'}</Badge>}
+            <span className="tnum text-xs text-text-muted">{formatMinutes(task.plannedMin, lang)}</span>
+            {task.startedAt && <span className="tnum text-xs text-text-muted">· {lang === 'ar' ? 'بدأ' : 'started'} {task.startedAt.slice(11, 16)}</span>}
           </div>
           <h3 className={cx('mt-1.5 text-sm font-medium', isDone && 'line-through')}>{task.title}</h3>
           {(subjectName || chapterTitle) && (
@@ -109,11 +112,11 @@ export function TaskCard({
                   onOpenFocus?.(task.id);
                 }}
               >
-                Start
+                {t('task.start')}
               </Button>
             ) : (
               <Button size="sm" variant="secondary" onClick={() => store.pauseTask(task.id)}>
-                Pause
+                {t('task.pause')}
               </Button>
             )}
             <Button
@@ -123,13 +126,13 @@ export function TaskCard({
                 onRequestComplete ? onRequestComplete(task) : store.completeTask(task.id, { actualMin: task.plannedMin })
               }
             >
-              Complete
+              {t('task.complete')}
             </Button>
             <Button size="sm" variant="ghost" onClick={() => store.skipTask(task.id)}>
-              Skip
+              {t('task.skip')}
             </Button>
             <Button size="sm" variant="ghost" onClick={() => setShowReschedule((v) => !v)}>
-              Reschedule
+              {t('task.reschedule')}
             </Button>
             <Button
               size="sm"
@@ -137,7 +140,7 @@ export function TaskCard({
               onClick={() => store.rateTask(task.id, task.difficulty === 'hard' ? 'ok' : 'hard')}
               title="Mark this task as difficult for future scheduling"
             >
-              {task.difficulty === 'hard' ? '✓ Difficult' : 'Mark difficult'}
+              {task.difficulty === 'hard' ? (lang === 'ar' ? '✓ صعب' : '✓ Difficult') : t('task.difficult')}
             </Button>
             <Button
               size="sm"
@@ -145,17 +148,17 @@ export function TaskCard({
               onClick={() => store.rateTask(task.id, task.difficulty === 'easy' ? 'ok' : 'easy')}
               title="Mark this task as easy — the planner will raise the challenge"
             >
-              {task.difficulty === 'easy' ? '✓ Easy' : 'Mark easy'}
+              {task.difficulty === 'easy' ? (lang === 'ar' ? '✓ سهل' : '✓ Easy') : t('task.easy')}
             </Button>
           </>
         )}
         {(isDone || isSkipped) && (
           <Button size="sm" variant="ghost" onClick={() => setExpanded((v) => !v)}>
-            {expanded ? 'Hide details' : 'Details'}
+            {expanded ? t('common.hideDetails') : t('common.showDetails')}
           </Button>
         )}
         <Button size="sm" variant="ghost" onClick={() => setExpanded((v) => !v)} aria-expanded={expanded}>
-          Note
+          {t('task.note')}
         </Button>
       </div>
 
@@ -176,7 +179,7 @@ export function TaskCard({
               </option>
             ))}
           </Select>
-          <span className="text-[11px] text-text-muted">Moves the task without piling it onto today.</span>
+          <span className="text-[11px] text-text-muted">{lang === 'ar' ? 'ينقل المهمة دون تكديسها في اليوم.' : 'Moves the task without piling it onto today.'}</span>
         </div>
       )}
 
@@ -185,21 +188,21 @@ export function TaskCard({
           <TextInput
             value={note}
             onChange={(event) => setNote(event.target.value)}
-            placeholder="What did you learn / what blocked you?"
-            aria-label="Task note"
+            placeholder={lang === 'ar' ? 'ماذا تعلمت / ما الذي عرقلَك؟' : 'What did you learn / what blocked you?'}
+            aria-label={t('task.note')}
           />
           <div className="flex items-center gap-2">
             <Button size="sm" variant="secondary" onClick={() => store.addTaskNote(task.id, note)}>
-              Save note
+              {t('common.save')}
             </Button>
             {task.actualMin > 0 && (
-              <span className="tnum text-[11px] text-text-muted">Logged: {formatMinutes(task.actualMin)}</span>
+              <span className="tnum text-[11px] text-text-muted">{lang === 'ar' ? 'المسجل:' : 'Logged:'} {formatMinutes(task.actualMin, lang)}</span>
             )}
             {task.skipCount > 0 && (
-              <span className="text-[11px] text-warning">Skipped {task.skipCount}×</span>
+              <span className="text-[11px] text-warning">{lang === 'ar' ? 'تم تخطي' : 'Skipped'} {task.skipCount}×</span>
             )}
             {task.deferCount > 0 && (
-              <span className="text-[11px] text-text-muted">Moved {task.deferCount}×</span>
+              <span className="text-[11px] text-text-muted">{lang === 'ar' ? 'تم النقل' : 'Moved'} {task.deferCount}×</span>
             )}
           </div>
           {task.difficulty && (
